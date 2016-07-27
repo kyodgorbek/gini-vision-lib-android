@@ -1,12 +1,12 @@
 package net.gini.android.vision.camera.api;
 
+import static net.gini.android.vision.camera.api.Util.calculateTapAreaForCameraAPI;
+import static net.gini.android.vision.camera.api.Util.convertCameraSizes;
 import static net.gini.android.vision.camera.api.Util.getLargestFourThreeRatioSize;
 
 import android.app.Activity;
-import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.hardware.Camera;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -163,7 +163,7 @@ public class CameraController implements CameraInterface {
                     }
 
                     mCamera.cancelAutoFocus();
-                    Rect focusRect = calculateTapArea(x, y, getBackFacingCameraOrientation(), view.getWidth(), view.getHeight());
+                    Rect focusRect = calculateTapAreaForCameraAPI(x, y, getBackFacingCameraOrientation(), view.getWidth(), view.getHeight());
                     LOG.debug("Focus rect calculated (l:{}, t:{}, r:{}, b:{})", focusRect.left, focusRect.top, focusRect.right, focusRect.bottom);
 
                     Camera.Parameters parameters = mCamera.getParameters();
@@ -317,7 +317,7 @@ public class CameraController implements CameraInterface {
         Camera.Parameters params = mCamera.getParameters();
 
         List<Camera.Size> previewSizes = params.getSupportedPreviewSizes();
-        Size previewSize = getLargestFourThreeRatioSize(previewSizes);
+        Size previewSize = getLargestFourThreeRatioSize(convertCameraSizes(previewSizes));
         if (previewSize != null) {
             mPreviewSize = previewSize;
             params.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
@@ -327,7 +327,7 @@ public class CameraController implements CameraInterface {
         }
 
         List<Camera.Size> pictureSizes = params.getSupportedPictureSizes();
-        Size pictureSize = getLargestFourThreeRatioSize(pictureSizes);
+        Size pictureSize = getLargestFourThreeRatioSize(convertCameraSizes(pictureSizes));
         if (pictureSize != null) {
             mPictureSize = pictureSize;
             params.setPictureSize(mPictureSize.width, mPictureSize.height);
@@ -417,103 +417,5 @@ public class CameraController implements CameraInterface {
         }
         LOG.debug("No camera info, using default camera orientation: 0");
         return 0;
-    }
-
-    /**
-     * <p>
-     * Converts the tap's coordinates in the view to the coordinates used by the camera sensor.
-     * </p>
-     * <p>
-     * The camera sensor's coordinates are (0,0) in the center, (-1000,-1000) in the top left and
-     * (1000,1000) in the lower right:
-     * <pre>
-     * (-1000,-1000)-----|-----(1000,-1000)
-     * |                 |                |
-     * |                 |                |
-     * ----------------(0,0)---------------
-     * |                 |                |
-     * |                 |                |
-     * (-1000,1000)------|------(1000,1000)
-     * </pre>
-     * The sensor's coordinates are not adapted to the display orientation, that means that in our case where
-     * we always show the camera preview in portrait, the coordinates are simply turned 90 degrees clockwise
-     * (for most devices, for others the calculated rect is rotated):
-     * <pre>
-     * (-1000,1000)---|---(-1000,-1000)
-     * |              |               |
-     * |              |               |
-     * |              |               |
-     * |      A       |       B       |
-     * |              |               |
-     * |              |               |
-     * |              |               |
-     * |              |               |
-     * |              |               |
-     * -------------(0,0)--------------
-     * |              |               |
-     * |              |               |
-     * |              |               |
-     * |      C       |       D       |
-     * |              |               |
-     * |              |               |
-     * |              |               |
-     * |              |               |
-     * |              |               |
-     * (1000,1000)----|----(1000,-1000)
-     * </pre>
-     * </p>
-     * <p>
-     * For easier conversion, we divided the view area into four parts (A, B, C, D) and do the conversion for each one
-     * separately.
-     * </p>
-     * <p>
-     * Calculations are made with the assumption of a 90 degree
-     * camera orientation. The real camera's orientation is normalized by subtracting 90 degrees and then the
-     * calculated
-     * rect is rotated by the normalized degrees.
-     * </p>
-     *
-     * @param x             tap's X position in the view
-     * @param y             tap's Y position in the view
-     * @param orientation   camera's orientation, see {@link Camera.CameraInfo#orientation}
-     * @param tapViewWidth  the width of the tappable view
-     * @param tapViewHeight the height of the tappable view
-     */
-    private Rect calculateTapArea(float x, float y, int orientation, int tapViewWidth, int tapViewHeight) {
-        Rect rect = new Rect(0, 0, 0, 0);
-        if (x < tapViewWidth / 2.f && y < tapViewHeight / 2.f) {
-            // A: x: -1000 .. 0; y: 1000 .. 0
-            rect.left = -(1000 - (int) (1000 * (y / (tapViewHeight / 2.f))));
-            rect.top = 1000 - (int) (1000 * (x / (tapViewWidth / 2.f)));
-        } else if (x < tapViewWidth / 2.f && y >= tapViewHeight / 2.f) {
-            // C: x: 0 .. 1000; y: 1000 .. 0
-            y = y - tapViewHeight / 2.f;
-            rect.left = (int) (1000 * (y / (tapViewHeight / 2.f)));
-            rect.top = 1000 - (int) (1000 * (x / (tapViewWidth / 2.f)));
-        } else if (x >= tapViewWidth / 2.f && y < tapViewHeight / 2.f) {
-            // B: x: -1000 .. 0; y: 0 .. -1000
-            x = x - tapViewWidth / 2.f;
-            rect.left = -(1000 - (int) (1000 * (y / (tapViewHeight / 2.f))));
-            rect.top = -(int) (1000 * (x / (tapViewWidth / 2.f)));
-        } else if (x >= tapViewWidth / 2.f && y >= tapViewHeight / 2.f) {
-            // D: x: 0 .. 1000; y: 0 .. -1000
-            x = x - tapViewWidth / 2.f;
-            y = y - tapViewHeight / 2.f;
-            rect.left = (int) (1000 * (y / (tapViewHeight / 2.f)));
-            rect.top = -(int) (1000 * (x / (tapViewWidth / 2.f)));
-        }
-        // Give a size to the rect
-        rect.bottom = rect.top + 5;
-        rect.right = rect.left + 5;
-        // Rotate the rect according to the camera's orientation
-        // Tap area was calculated for a camera with a 90 degrees orientation
-        // so we have to normalize the rotation taking that into account
-        int rectRotation = orientation - 90;
-        RectF rectF = new RectF(rect);
-        Matrix matrix = new Matrix();
-        matrix.setRotate(rectRotation);
-        matrix.mapRect(rectF);
-        rect.set((int) rectF.left, (int) rectF.top, (int) rectF.right, (int) rectF.bottom);
-        return rect;
     }
 }

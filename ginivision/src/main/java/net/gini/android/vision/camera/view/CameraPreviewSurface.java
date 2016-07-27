@@ -30,6 +30,8 @@ public class CameraPreviewSurface extends SurfaceView {
 
     public void setPreviewSize(Size previewSize) {
         this.mPreviewSize = previewSize;
+        // Preview size is in landscape, we need it in portrait, switching height and width
+        getHolder().setFixedSize(previewSize.height, previewSize.width);
         requestLayout();
     }
 

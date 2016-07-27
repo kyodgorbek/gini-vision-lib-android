@@ -109,8 +109,34 @@ public interface CameraInterface {
     @NonNull
     Size getPictureSize();
 
-    public interface TapToFocusListener {
+    /**
+     * <p>
+     *     Listener for handling tap-to-focus events.
+     * </p>
+     */
+    interface TapToFocusListener {
+        /**
+         * <p>
+         *     Called when the focusing starts on the tapped position.
+         * </p>
+         * @param point the coordinates of the tap in the tap view's coordinate system
+         */
         void onFocusing(Point point);
+
+        /**
+         * <p>
+         *     Called after the focusing has finished.
+         * </p>
+         * @param success {@code true} if focusing succeeded, otherwise {@code false}
+         */
         void onFocused(boolean success);
+    }
+
+    enum CameraError {
+        CAMERA_NO_ACCESS,
+        CAMERA_OPEN_FAILED,
+        CAMERA_NO_PREVIEW,
+        CAMERA_SHOT_FAILED,
+        CAMERA_UNKNOWN
     }
 }

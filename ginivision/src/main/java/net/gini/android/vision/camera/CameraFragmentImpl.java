@@ -1,6 +1,6 @@
 package net.gini.android.vision.camera;
 
-import static net.gini.android.vision.camera.Util.cameraExceptionToGiniVisionError;
+import static net.gini.android.vision.camera.api.Util.cameraExceptionToGiniVisionError;
 import static net.gini.android.vision.util.AndroidHelper.isMarshmallowOrLater;
 import static net.gini.android.vision.util.ContextHelper.getClientApplicationId;
 
@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Point;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -27,6 +28,7 @@ import net.gini.android.vision.Document;
 import net.gini.android.vision.GiniVisionError;
 import net.gini.android.vision.R;
 import net.gini.android.vision.camera.api.CameraController;
+import net.gini.android.vision.camera.api.CameraController2;
 import net.gini.android.vision.camera.api.CameraInterface;
 import net.gini.android.vision.camera.photo.Photo;
 import net.gini.android.vision.camera.view.CameraPreviewSurface;
@@ -58,7 +60,7 @@ class CameraFragmentImpl implements CameraFragmentInterface {
     private final FragmentImplCallback mFragment;
     private CameraFragmentListener mListener = NO_OP_LISTENER;
 
-    private CameraController mCameraController;
+    private CameraInterface mCameraController;
 
     private RelativeLayout mLayoutRoot;
     private CameraPreviewSurface mCameraPreview;
@@ -442,10 +444,15 @@ class CameraFragmentImpl implements CameraFragmentInterface {
         mFragment.startActivity(intent);
     }
 
-    private CameraController initCameraController(Activity activity) {
+    private CameraInterface initCameraController(@NonNull Activity activity) {
         if (mCameraController == null) {
-            LOG.debug("CameraController created");
-            mCameraController = new CameraController(activity);
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                LOG.debug("CameraController2 created");
+                mCameraController = new CameraController2(activity);
+            } else {
+                LOG.debug("CameraController created");
+                mCameraController = new CameraController(activity);
+            }
         }
         return mCameraController;
     }
