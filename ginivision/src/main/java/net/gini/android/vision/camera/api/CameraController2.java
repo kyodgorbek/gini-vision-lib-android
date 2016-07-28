@@ -10,6 +10,7 @@ import android.content.Context;
 import android.graphics.ImageFormat;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -161,6 +162,9 @@ public class CameraController2 implements CameraInterface {
      * @return a {@link SimplePromise}{@code [done: CameraDevice, fail: String|CameraAccessException|SecurityException]}
      */
     private SimplePromise openCamera(@NonNull String cameraId) {
+        if (mCameraDevice != null) {
+            return SimpleDeferred.resolvedPromise(mCameraDevice);
+        }
         final SimpleDeferred deferred = new SimpleDeferred();
         try {
             //noinspection MissingPermission
@@ -221,20 +225,28 @@ public class CameraController2 implements CameraInterface {
             mCaptureSession.close();
             mCaptureSession = null;
         }
+        if (mPreviewRequestBuilder != null) {
+            mPreviewRequestBuilder = null;
+        }
         LOG.info("Camera closed");
     }
 
     @NonNull
     @Override
-    public SimplePromise startPreview(@NonNull SurfaceHolder surfaceHolder) {
+    public SimplePromise startPreview(@NonNull SurfaceTexture surfaceTexture) {
+        if (mCameraDevice == null) {
+            LOG.error("Cannot start preview: camera not open");
+            return SimpleDeferred.rejectedPromise("Cannot start preview: camera not open");
+        }
         final SimpleDeferred deferred = new SimpleDeferred();
+        Surface surface = new Surface(surfaceTexture);
         try {
-            createPreviewRequestBuilder(surfaceHolder.getSurface());
+            createPreviewRequestBuilder(surfaceTexture, surface);
         } catch (CameraAccessException e) {
             deferred.reject(e);
         }
         try {
-            mCameraDevice.createCaptureSession(Collections.singletonList(surfaceHolder.getSurface()),
+            mCameraDevice.createCaptureSession(Collections.singletonList(surface),
                     new CameraCaptureSession.StateCallback() {
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession session) {
@@ -271,10 +283,12 @@ public class CameraController2 implements CameraInterface {
         return deferred.promise();
     }
 
-    private void createPreviewRequestBuilder(Surface surface) throws CameraAccessException {
+    private void createPreviewRequestBuilder(@NonNull SurfaceTexture surfaceTexture, Surface surface) throws CameraAccessException {
         if (mPreviewRequestBuilder != null) {
             return;
         }
+        surfaceTexture.setDefaultBufferSize(mPreviewSize.width, mPreviewSize.height);
+
         mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
         mPreviewRequestBuilder.addTarget(surface);
         // Auto Focus

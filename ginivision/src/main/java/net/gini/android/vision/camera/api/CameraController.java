@@ -7,13 +7,13 @@ import static net.gini.android.vision.camera.api.Util.getLargestFourThreeRatioSi
 import android.app.Activity;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.MotionEvent;
 import android.view.Surface;
-import android.view.SurfaceHolder;
 import android.view.View;
 
 import net.gini.android.vision.camera.photo.Photo;
@@ -109,7 +109,7 @@ public class CameraController implements CameraInterface {
 
     @NonNull
     @Override
-    public SimplePromise startPreview(@NonNull SurfaceHolder surfaceHolder) {
+    public SimplePromise startPreview(@NonNull SurfaceTexture surfaceTexture) {
         LOG.info("Start preview");
         if (mCamera == null) {
             LOG.error("Cannot start preview: camera not open");
@@ -120,7 +120,7 @@ public class CameraController implements CameraInterface {
             return SimpleDeferred.resolvedPromise(null);
         }
         try {
-            mCamera.setPreviewDisplay(surfaceHolder);
+            mCamera.setPreviewTexture(surfaceTexture);
             mCamera.startPreview();
             mPreviewRunning = true;
             LOG.info("Preview started");

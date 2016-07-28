@@ -2,11 +2,11 @@ package net.gini.android.vision.camera.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.SurfaceView;
+import android.view.TextureView;
 
 import net.gini.android.vision.camera.photo.Size;
 
-public class CameraPreviewSurface extends SurfaceView {
+public class CameraPreviewTextureView extends TextureView {
 
     private Size mPreviewSize;
 
@@ -16,22 +16,20 @@ public class CameraPreviewSurface extends SurfaceView {
 
     private ScaleType mScaleType = ScaleType.CENTER_INSIDE;
 
-    public CameraPreviewSurface(Context context) {
+    public CameraPreviewTextureView(Context context) {
         super(context);
     }
 
-    public CameraPreviewSurface(Context context, AttributeSet attrs) {
+    public CameraPreviewTextureView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
-    public CameraPreviewSurface(Context context, AttributeSet attrs, int defStyleAttr) {
+    public CameraPreviewTextureView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 
     public void setPreviewSize(Size previewSize) {
         this.mPreviewSize = previewSize;
-        // Preview size is in landscape, we need it in portrait, switching height and width
-        getHolder().setFixedSize(previewSize.height, previewSize.width);
         requestLayout();
     }
 
@@ -44,8 +42,8 @@ public class CameraPreviewSurface extends SurfaceView {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        int width = getWidth();
-        int height = getHeight();
+        int width = MeasureSpec.getSize(widthMeasureSpec);
+        int height = MeasureSpec.getSize(heightMeasureSpec);
 
         if (width > 0 && height > 0 &&
                 mPreviewSize != null) {
@@ -82,6 +80,8 @@ public class CameraPreviewSurface extends SurfaceView {
             }
 
             setMeasuredDimension(adjustedWidth, adjustedHeight);
+        } else {
+            setMeasuredDimension(width, height);
         }
     }
 }

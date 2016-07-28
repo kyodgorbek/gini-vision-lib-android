@@ -1,6 +1,7 @@
 package net.gini.android.vision.camera.api;
 
 import android.graphics.Point;
+import android.graphics.SurfaceTexture;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.SurfaceHolder;
@@ -43,11 +44,11 @@ public interface CameraInterface {
      * <p>
      *     <b>Note</b>: the {@link android.view.SurfaceView} must have been created when starting the preview.
      * </p>
-     * @param surfaceHolder the {@link SurfaceHolder} for the camera preview {@link android.view.SurfaceView}
+     * @param surfaceTexture the {@link SurfaceTexture} for the camera preview {@link android.view.TextureView}
      * @return a {@link SimplePromise}{@code [done: null, fail: String|Exception]}
      */
     @NonNull
-    SimplePromise startPreview(@NonNull SurfaceHolder surfaceHolder);
+    SimplePromise startPreview(@NonNull SurfaceTexture surfaceTexture);
 
     /**
      * Stops the camera preview.

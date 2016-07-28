@@ -6,7 +6,10 @@ import static net.gini.android.vision.util.ContextHelper.getClientApplicationId;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Matrix;
 import android.graphics.Point;
+import android.graphics.RectF;
+import android.graphics.SurfaceTexture;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,7 +17,8 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
-import android.view.SurfaceHolder;
+import android.view.Surface;
+import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
@@ -31,7 +35,8 @@ import net.gini.android.vision.camera.api.CameraController;
 import net.gini.android.vision.camera.api.CameraController2;
 import net.gini.android.vision.camera.api.CameraInterface;
 import net.gini.android.vision.camera.photo.Photo;
-import net.gini.android.vision.camera.view.CameraPreviewSurface;
+import net.gini.android.vision.camera.photo.Size;
+import net.gini.android.vision.camera.view.CameraPreviewTextureView;
 import net.gini.android.vision.ui.FragmentImplCallback;
 import net.gini.android.vision.ui.ViewStubSafeInflater;
 import net.gini.android.vision.util.promise.Promises;
@@ -63,7 +68,7 @@ class CameraFragmentImpl implements CameraFragmentInterface {
     private CameraInterface mCameraController;
 
     private RelativeLayout mLayoutRoot;
-    private CameraPreviewSurface mCameraPreview;
+    private CameraPreviewTextureView mCameraPreview;
     private ImageView mCameraFocusIndicator;
     private ImageView mImageCorners;
     private ImageButton mButtonCameraTrigger;
@@ -71,7 +76,7 @@ class CameraFragmentImpl implements CameraFragmentInterface {
 
     private ViewStubSafeInflater mViewStubInflater;
 
-    private SimpleDeferred mSurfaceCreatedDeferred = new SimpleDeferred();
+    private SimpleDeferred mSurfaceTextureDeferred = new SimpleDeferred();
 
     CameraFragmentImpl(@NonNull FragmentImplCallback fragment) {
         mFragment = fragment;
@@ -90,7 +95,7 @@ class CameraFragmentImpl implements CameraFragmentInterface {
         View view = inflater.inflate(R.layout.gv_fragment_camera, container, false);
         bindViews(view);
         setInputHandlers();
-        setSurfaceViewCallback();
+        setSurfaceTextureListener();
         return view;
     }
 
@@ -99,17 +104,18 @@ class CameraFragmentImpl implements CameraFragmentInterface {
             return;
         }
         initCameraController(mFragment.getActivity());
-        Promises.bundle(openCamera(), mSurfaceCreatedDeferred.promise())
+        checkSurfaceTextureAvailability();
+        Promises.bundle(openCamera(), mSurfaceTextureDeferred.promise())
                 .done(new SimplePromise.DoneCallback() {
                     @Nullable
                     @Override
                     public SimplePromise onDone(@Nullable Object result) {
                         List<Promises.Resolution> results = (List<Promises.Resolution>) result;
                         if (results != null && results.get(0) != null && results.get(1) != null) {
-                            SurfaceHolder holder = (SurfaceHolder) results.get(1).getResult();
-                            if (holder != null) {
+                            SurfaceTexture surfaceTexture = (SurfaceTexture) results.get(1).getResult();
+                            if (surfaceTexture != null) {
                                 mCameraPreview.setPreviewSize(mCameraController.getPreviewSize());
-                                startPreview(holder);
+                                startPreview(surfaceTexture);
                                 enableTapToFocus();
                             } else {
                                 String message = "Cannot start preview: no SurfaceHolder received for SurfaceView";
@@ -135,8 +141,17 @@ class CameraFragmentImpl implements CameraFragmentInterface {
                 });
     }
 
-    private void startPreview(SurfaceHolder holder) {
-        mCameraController.startPreview(holder)
+    private void checkSurfaceTextureAvailability() {
+        if (mCameraPreview.isAvailable()) {
+            if (mSurfaceTextureDeferred == null) {
+                mSurfaceTextureDeferred = new SimpleDeferred();
+            }
+            mSurfaceTextureDeferred.resolve(mCameraPreview.getSurfaceTexture());
+        }
+    }
+
+    private void startPreview(SurfaceTexture surfaceTexture) {
+        mCameraController.startPreview(surfaceTexture)
                 .fail(new SimplePromise.FailCallback() {
                     @Nullable
                     @Override
@@ -236,7 +251,7 @@ class CameraFragmentImpl implements CameraFragmentInterface {
 
     private void bindViews(View view) {
         mLayoutRoot = (RelativeLayout) view.findViewById(R.id.gv_root);
-        mCameraPreview = (CameraPreviewSurface) view.findViewById(R.id.gv_camera_preview);
+        mCameraPreview = (CameraPreviewTextureView) view.findViewById(R.id.gv_camera_preview);
         mCameraFocusIndicator = (ImageView) view.findViewById(R.id.gv_camera_focus_indicator);
         mImageCorners = (ImageView) view.findViewById(R.id.gv_image_corners);
         mButtonCameraTrigger = (ImageButton) view.findViewById(R.id.gv_button_camera_trigger);
@@ -280,25 +295,64 @@ class CameraFragmentImpl implements CameraFragmentInterface {
         });
     }
 
-    private void setSurfaceViewCallback() {
-        mCameraPreview.getHolder().addCallback(new SurfaceHolder.Callback() {
+    private void setSurfaceTextureListener() {
+        mCameraPreview.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                LOG.debug("Surface created");
-                mSurfaceCreatedDeferred.resolve(holder);
+            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+                LOG.debug("SurfaceTexture created");
+                configureSurfaceTextureTransform();
+                mSurfaceTextureDeferred.resolve(surface);
             }
 
             @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                LOG.debug("Surface changed");
+            public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+                LOG.debug("SurfaceTexture size changed");
+                configureSurfaceTextureTransform();
             }
 
             @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-                LOG.debug("Surface destroyed");
-                mSurfaceCreatedDeferred = new SimpleDeferred();
+            public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+                LOG.debug("SurfaceTexture destroyed");
+                mSurfaceTextureDeferred = new SimpleDeferred();
+                return true;
+            }
+
+            @Override
+            public void onSurfaceTextureUpdated(SurfaceTexture surface) {
             }
         });
+    }
+
+    /**
+     * Configures the necessary {@link android.graphics.Matrix} transformation to `mTextureView`.
+     * This method should be called after the camera preview size is determined
+     * and also the size of `mTextureView` is fixed.
+     */
+    private void configureSurfaceTextureTransform() {
+        if (mFragment.getActivity() == null) {
+            return;
+        }
+        int viewWidth = mCameraPreview.getWidth();
+        int viewHeight = mCameraPreview.getHeight();
+        Size previewSize = mCameraController.getPreviewSize();
+        int rotation = mFragment.getActivity().getWindowManager().getDefaultDisplay().getRotation();
+        Matrix matrix = new Matrix();
+        RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
+        RectF bufferRect = new RectF(0, 0, previewSize.height, previewSize.width);
+        float centerX = viewRect.centerX();
+        float centerY = viewRect.centerY();
+        if (rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) {
+            bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
+            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
+            float scale = Math.max(
+                    (float) viewHeight / previewSize.height,
+                    (float) viewWidth / previewSize.width);
+            matrix.postScale(scale, scale, centerX, centerY);
+            matrix.postRotate(90 * (rotation - 2), centerX, centerY);
+        } else if (Surface.ROTATION_180 == rotation) {
+            matrix.postRotate(180, centerX, centerY);
+        }
+        mCameraPreview.setTransform(matrix);
     }
 
     @Override
