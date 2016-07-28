@@ -6,9 +6,7 @@ import static net.gini.android.vision.util.ContextHelper.getClientApplicationId;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Matrix;
 import android.graphics.Point;
-import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.net.Uri;
 import android.os.Build;
@@ -17,7 +15,6 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
-import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,7 +32,6 @@ import net.gini.android.vision.camera.api.CameraController;
 import net.gini.android.vision.camera.api.CameraController2;
 import net.gini.android.vision.camera.api.CameraInterface;
 import net.gini.android.vision.camera.photo.Photo;
-import net.gini.android.vision.camera.photo.Size;
 import net.gini.android.vision.camera.view.CameraPreviewTextureView;
 import net.gini.android.vision.ui.FragmentImplCallback;
 import net.gini.android.vision.ui.ViewStubSafeInflater;
@@ -300,14 +296,12 @@ class CameraFragmentImpl implements CameraFragmentInterface {
             @Override
             public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
                 LOG.debug("SurfaceTexture created");
-                configureSurfaceTextureTransform();
                 mSurfaceTextureDeferred.resolve(surface);
             }
 
             @Override
             public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
                 LOG.debug("SurfaceTexture size changed");
-                configureSurfaceTextureTransform();
             }
 
             @Override
@@ -321,38 +315,6 @@ class CameraFragmentImpl implements CameraFragmentInterface {
             public void onSurfaceTextureUpdated(SurfaceTexture surface) {
             }
         });
-    }
-
-    /**
-     * Configures the necessary {@link android.graphics.Matrix} transformation to `mTextureView`.
-     * This method should be called after the camera preview size is determined
-     * and also the size of `mTextureView` is fixed.
-     */
-    private void configureSurfaceTextureTransform() {
-        if (mFragment.getActivity() == null) {
-            return;
-        }
-        int viewWidth = mCameraPreview.getWidth();
-        int viewHeight = mCameraPreview.getHeight();
-        Size previewSize = mCameraController.getPreviewSize();
-        int rotation = mFragment.getActivity().getWindowManager().getDefaultDisplay().getRotation();
-        Matrix matrix = new Matrix();
-        RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
-        RectF bufferRect = new RectF(0, 0, previewSize.height, previewSize.width);
-        float centerX = viewRect.centerX();
-        float centerY = viewRect.centerY();
-        if (rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) {
-            bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
-            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
-            float scale = Math.max(
-                    (float) viewHeight / previewSize.height,
-                    (float) viewWidth / previewSize.width);
-            matrix.postScale(scale, scale, centerX, centerY);
-            matrix.postRotate(90 * (rotation - 2), centerX, centerY);
-        } else if (Surface.ROTATION_180 == rotation) {
-            matrix.postRotate(180, centerX, centerY);
-        }
-        mCameraPreview.setTransform(matrix);
     }
 
     @Override
