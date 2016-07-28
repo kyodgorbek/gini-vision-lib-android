@@ -39,6 +39,14 @@ public interface CameraInterface {
 
     /**
      * <p>
+     *     Query the camera's state.
+     * </p>
+     * @return {@code true}, if the camera is open
+     */
+    boolean isOpen();
+
+    /**
+     * <p>
      *     Starts the preview using the given {@link SurfaceHolder}.
      * </p>
      * <p>
@@ -54,6 +62,14 @@ public interface CameraInterface {
      * Stops the camera preview.
      */
     void stopPreview();
+
+    /**
+     * <p>
+     *     Query the preview's state.
+     * </p>
+     * @return {@code true}, if the preview is running
+     */
+    boolean isPreviewRunning();
 
     /**
      * <p>

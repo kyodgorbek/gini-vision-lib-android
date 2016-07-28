@@ -23,6 +23,8 @@ import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.MeteringRectangle;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.Image;
+import android.media.ImageReader;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -32,6 +34,7 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.View;
 
+import net.gini.android.vision.camera.photo.Photo;
 import net.gini.android.vision.camera.photo.Size;
 import net.gini.android.vision.util.promise.SimpleDeferred;
 import net.gini.android.vision.util.promise.SimplePromise;
@@ -39,7 +42,7 @@ import net.gini.android.vision.util.promise.SimplePromise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -63,13 +66,17 @@ public class CameraController2 implements CameraInterface {
 
     private CaptureRequest.Builder mPreviewRequestBuilder;
     private CaptureRequest mPreviewRequest;
+    private boolean mPreviewRunning = false;
 
     private AtomicBoolean mFocusing = new AtomicBoolean();
     private boolean mAutoFocusRegionsSupported = false;
+    private boolean mAutoExposureRegionsSupported = false;
     private Rect mSensorArrayRect;
 
     private final Handler mResetFocusHandler;
     private final UIExecutor mUIExecutor;// TODO: needed?
+
+    private ImageReader mImageReader;
 
     private Runnable mResetFocusMode = new Runnable() {
         @Override
@@ -79,6 +86,8 @@ public class CameraController2 implements CameraInterface {
             }
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
+                    CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
             try {
                 mCaptureSession.capture(mPreviewRequestBuilder.build(), null, null);
             } catch (CameraAccessException e) {
@@ -228,12 +237,25 @@ public class CameraController2 implements CameraInterface {
         if (mPreviewRequestBuilder != null) {
             mPreviewRequestBuilder = null;
         }
+        if (mImageReader != null) {
+            mImageReader.close();
+            mImageReader = null;
+        }
         LOG.info("Camera closed");
+    }
+
+    @Override
+    public boolean isOpen() {
+        return mCameraDevice != null;
     }
 
     @NonNull
     @Override
     public SimplePromise startPreview(@NonNull SurfaceTexture surfaceTexture) {
+        if (mPreviewRunning) {
+            // TODO: log
+            return SimpleDeferred.resolvedPromise(null);
+        }
         if (mCameraDevice == null) {
             LOG.error("Cannot start preview: camera not open");
             return SimpleDeferred.rejectedPromise("Cannot start preview: camera not open");
@@ -246,7 +268,7 @@ public class CameraController2 implements CameraInterface {
             deferred.reject(e);
         }
         try {
-            mCameraDevice.createCaptureSession(Collections.singletonList(surface),
+            mCameraDevice.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),
                     new CameraCaptureSession.StateCallback() {
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession session) {
@@ -259,6 +281,7 @@ public class CameraController2 implements CameraInterface {
                             try {
                                 mPreviewRequest = mPreviewRequestBuilder.build();
                                 mCaptureSession.setRepeatingRequest(mPreviewRequest, null, null);
+                                mPreviewRunning = true;
                                 deferred.resolve(null);
                             } catch (CameraAccessException e) {
                                 mPreviewRequestBuilder = null;
@@ -299,13 +322,14 @@ public class CameraController2 implements CameraInterface {
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
                     CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
         }
-        // Orientation
-        mPreviewRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION,
-                getJPEGOrientation(mActivity));
     }
 
     @Override
     public void stopPreview() {
+        if (!mPreviewRunning) {
+            return;
+        }
+        mPreviewRunning = false;
         if (mCaptureSession == null) {
             return;
         }
@@ -314,6 +338,11 @@ public class CameraController2 implements CameraInterface {
         } catch (CameraAccessException e) {
             // TODO: log
         }
+    }
+
+    @Override
+    public boolean isPreviewRunning() {
+        return mPreviewRunning;
     }
 
     @Override
@@ -337,17 +366,28 @@ public class CameraController2 implements CameraInterface {
                         LOG.warn("Focus areas not supported");
                         return false;
                     }
+                    if (!mAutoExposureRegionsSupported) {
+                        LOG.warn("Exposure areas not supported");
+                        return false;
+                    }
+
+                    mResetFocusMode.run();
 
                     Rect focusRect = calculateTapAreaForCamera2API(x, y, mCameraOrientation, view.getWidth(), view.getHeight(), mSensorArrayRect);
                     LOG.debug("Focus rect calculated (l:{}, t:{}, r:{}, b:{})", focusRect.left, focusRect.top, focusRect.right, focusRect.bottom);
 
+                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
+                            CameraMetadata.CONTROL_AF_MODE_AUTO);
+
+                    // TODO: Regions don't seem to have an effect, fix it later (maybe focusRect calculation is wrong)
+                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS,
+                            new MeteringRectangle[]{new MeteringRectangle(focusRect, MeteringRectangle.METERING_WEIGHT_MAX)});
+                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_REGIONS,
+                            new MeteringRectangle[]{new MeteringRectangle(focusRect, MeteringRectangle.METERING_WEIGHT_MAX)});
+                    LOG.debug("Focus area set");
+
                     mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
                             CameraMetadata.CONTROL_AF_TRIGGER_START);
-
-                    MeteringRectangle[] meteringRectangles = new MeteringRectangle[1];
-                    meteringRectangles[0] = new MeteringRectangle(focusRect, MeteringRectangle.METERING_WEIGHT_MAX);
-                    mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_REGIONS, meteringRectangles);
-                    LOG.debug("Focus area set");
 
                     try {
                         mFocusing.set(true);
@@ -358,25 +398,33 @@ public class CameraController2 implements CameraInterface {
                         mCaptureSession.capture(mPreviewRequestBuilder.build(), new CameraCaptureSession.CaptureCallback() {
                             @Override
                             public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
+                                if (!mFocusing.get()) {
+                                    return;
+                                }
                                 boolean success = false;
                                 Integer afState = result.get(CaptureResult.CONTROL_AF_STATE);
                                 if (afState != null) {
-                                    success = afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED;
+                                    success = afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED ||
+                                            afState == CaptureResult.CONTROL_AF_STATE_PASSIVE_FOCUSED;
                                 }
+                                mFocusing.set(false);
+                                LOG.info("Focusing finished {}", success);
                                 if (listener != null) {
                                     listener.onFocused(success);
                                 }
                                 mResetFocusHandler.removeCallbacks(mResetFocusMode);
-                                mResetFocusHandler.postDelayed(mResetFocusMode, 5000);
+                                mResetFocusHandler.postDelayed(mResetFocusMode, 2000);
                             }
 
                             @Override
                             public void onCaptureFailed(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull CaptureFailure failure) {
+                                LOG.info("Focusing finished false");
+                                mFocusing.set(false);
                                 if (listener != null) {
                                     listener.onFocused(false);
                                 }
                                 mResetFocusHandler.removeCallbacks(mResetFocusMode);
-                                mResetFocusHandler.postDelayed(mResetFocusMode, 5000);
+                                mResetFocusHandler.postDelayed(mResetFocusMode, 2000);
                             }
                         }, null);
                     } catch (Exception e) {
@@ -397,13 +445,126 @@ public class CameraController2 implements CameraInterface {
     @NonNull
     @Override
     public SimplePromise focus() {
-        return null;
+        final SimpleDeferred deferred = new SimpleDeferred();
+
+        if (mCameraDevice == null) {
+            deferred.resolve(false);
+            return deferred.promise();
+        }
+
+        if (mFocusing.get()) {
+            // TODO: log
+            return deferred.promise();
+        }
+
+        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
+                CameraMetadata.CONTROL_AF_MODE_AUTO);
+        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
+                CameraMetadata.CONTROL_AF_TRIGGER_START);
+        try {
+            mFocusing.set(true);
+            LOG.info("Focusing started");
+            mCaptureSession.capture(mPreviewRequestBuilder.build(), new CameraCaptureSession.CaptureCallback() {
+                @Override
+                public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
+                    if (!mFocusing.get()) {
+                        return;
+                    }
+                    boolean success = false;
+                    Integer afState = result.get(CaptureResult.CONTROL_AF_STATE);
+                    if (afState != null) {
+                        success = afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED ||
+                                afState == CaptureResult.CONTROL_AF_STATE_PASSIVE_FOCUSED;
+                    }
+                    deferred.resolve(success);
+                    mFocusing.set(false);
+                    LOG.info("Focusing finished {}", success);
+                    mResetFocusHandler.removeCallbacks(mResetFocusMode);
+                    mResetFocusMode.run();
+                }
+
+                @Override
+                public void onCaptureFailed(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull CaptureFailure failure) {
+                    LOG.info("Focusing finished false");
+                    mFocusing.set(false);
+                    deferred.resolve(false);
+                    mResetFocusHandler.removeCallbacks(mResetFocusMode);
+                    mResetFocusMode.run();
+                }
+            }, null);
+        } catch (Exception e) {
+            mFocusing.set(false);
+            deferred.resolve(false);
+            LOG.error("Could not focus", e);
+        }
+
+        return deferred.promise();
     }
 
     @NonNull
     @Override
     public SimplePromise takePicture() {
-        return null;
+        final SimpleDeferred deferred = new SimpleDeferred();
+
+        try {
+            if (mCameraDevice == null) {
+                LOG.error("Cannot take picture: camera not open");
+                deferred.reject("Cannot take picture: camera not open");
+                return deferred.promise();
+            }
+
+            final CaptureRequest.Builder captureBuilder =
+                    mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+            captureBuilder.addTarget(mImageReader.getSurface());
+
+            captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
+                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+            if (mFlashSupported) {
+                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+                        CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH);
+            }
+
+            mCaptureSession.stopRepeating();
+            mCaptureSession.capture(captureBuilder.build(), new CameraCaptureSession.CaptureCallback() {
+                @Override
+                public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
+                    try {
+                        mCaptureSession.setRepeatingRequest(mPreviewRequest, null, null);
+                    } catch (CameraAccessException e) {
+                        // TODO: log
+                    }
+                }
+
+                @Override
+                public void onCaptureFailed(CameraCaptureSession session, CaptureRequest request, CaptureFailure failure) {
+                    deferred.reject("Cannot take picture");
+                }
+            }, null);
+
+            mImageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+                @Override
+                public void onImageAvailable(ImageReader reader) {
+                    Image image = reader.acquireNextImage();
+                    if (image == null) {
+                        deferred.reject("No image received");
+                        return;
+                    }
+
+                    Image.Plane plane = image.getPlanes()[0];
+                    byte[] bytes = new byte[plane.getBuffer().remaining()];
+                    plane.getBuffer().get(bytes);
+
+                    deferred.resolve(Photo.fromJpeg(bytes, mCameraOrientation));
+
+                    mImageReader.setOnImageAvailableListener(null, null);
+                }
+            }, null);
+        } catch (CameraAccessException e) {
+            // TODO: log
+            deferred.reject(e);
+        }
+
+        return deferred.promise();
     }
 
     @NonNull
@@ -438,6 +599,9 @@ public class CameraController2 implements CameraInterface {
         Integer maxAfRegions = characteristics.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AF);
         mAutoFocusRegionsSupported = maxAfRegions != null && maxAfRegions > 0;
 
+        Integer maxAeRegions = characteristics.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AE);
+        mAutoExposureRegionsSupported = maxAeRegions != null && maxAeRegions > 0;
+
         mSensorArrayRect = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
 
         StreamConfigurationMap configurationMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
@@ -469,6 +633,9 @@ public class CameraController2 implements CameraInterface {
         } else {
             // TODO: log
         }
+
+        mImageReader = ImageReader.newInstance(mPictureSize.width, mPictureSize.height,
+                ImageFormat.JPEG, 2);
     }
 
     private int getJPEGOrientation(Activity activity) {
@@ -497,4 +664,5 @@ public class CameraController2 implements CameraInterface {
         LOG.debug("JPEG orientation is {}", result);
         return result;
     }
+
 }

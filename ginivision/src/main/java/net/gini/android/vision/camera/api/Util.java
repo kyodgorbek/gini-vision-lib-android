@@ -183,22 +183,21 @@ public final class Util {
         Rect rect = new Rect(0, 0, 0, 0);
 
         // Percentual position in the view
-        rect.left = (int) (x / tapViewWidth);
+        float xPercent = x / tapViewWidth;
         // Transfer the position to the sensor coordinates
-        rect.left = sensorArrayRect.width() * rect.left;
+        rect.left = (int) (sensorArrayRect.width() * xPercent);
 
         // Percentual position in the view
-        rect.top = (int) (y / tapViewHeight);
+        float yPercent = y / tapViewHeight;
         // Transfer the position to the sensor coordinates
-        rect.top = sensorArrayRect.height() * rect.top;
+        rect.top = (int) (sensorArrayRect.height() * yPercent);
 
         // Give a size to the rect
-        rect.bottom = rect.top + 5;
-        rect.right = rect.left + 5;
+        rect.bottom = rect.top + 200;
+        rect.right = rect.left + 200;
 
         RectF rectF = new RectF(rect);
         Matrix matrix = new Matrix();
-        matrix.setRotate(orientation);
         matrix.mapRect(rectF);
         rect.set((int) rectF.left, (int) rectF.top, (int) rectF.right, (int) rectF.bottom);
 

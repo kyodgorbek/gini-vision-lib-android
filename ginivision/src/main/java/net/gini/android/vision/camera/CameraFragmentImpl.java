@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -29,7 +28,6 @@ import net.gini.android.vision.Document;
 import net.gini.android.vision.GiniVisionError;
 import net.gini.android.vision.R;
 import net.gini.android.vision.camera.api.CameraController;
-import net.gini.android.vision.camera.api.CameraController2;
 import net.gini.android.vision.camera.api.CameraInterface;
 import net.gini.android.vision.camera.photo.Photo;
 import net.gini.android.vision.camera.view.CameraPreviewTextureView;
@@ -462,13 +460,8 @@ class CameraFragmentImpl implements CameraFragmentInterface {
 
     private CameraInterface initCameraController(@NonNull Activity activity) {
         if (mCameraController == null) {
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                LOG.debug("CameraController2 created");
-                mCameraController = new CameraController2(activity);
-            } else {
-                LOG.debug("CameraController created");
-                mCameraController = new CameraController(activity);
-            }
+            LOG.debug("CameraController created");
+            mCameraController = new CameraController(activity);
         }
         return mCameraController;
     }

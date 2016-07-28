@@ -107,6 +107,11 @@ public class CameraController implements CameraInterface {
         LOG.info("Camera closed");
     }
 
+    @Override
+    public boolean isOpen() {
+        return mCamera != null;
+    }
+
     @NonNull
     @Override
     public SimplePromise startPreview(@NonNull SurfaceTexture surfaceTexture) {
@@ -141,6 +146,11 @@ public class CameraController implements CameraInterface {
         mCamera.stopPreview();
         mPreviewRunning = false;
         LOG.info("Preview stopped");
+    }
+
+    @Override
+    public boolean isPreviewRunning() {
+        return mPreviewRunning;
     }
 
     @Override
