@@ -18,16 +18,6 @@ pipeline {
                 sh './gradlew ginivision:clean ginivision:assembleDebug ginivision:assembleRelease'
             }
         }
-        stage('Unit Tests') {
-            steps {
-                sh './gradlew ginivision:test'
-            }
-            post {
-                always {
-                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true, reportDir: 'ginivision/build/reports/tests/testDebugUnitTest', reportFiles: 'index.html', reportName: 'Unit Test Results', reportTitles: ''])
-                }
-            }
-        }
         stage('Create AVDs') {
             steps {
                 withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
@@ -37,41 +27,55 @@ pipeline {
                 }
             }
         }
-        stage('Instrumentation Tests - Phone') {
-            steps {
-                withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                    sh 'scripts/start-emulator-with-skin.sh "api-25-nexus-5x"_$(scripts/get-avd-name.sh) nexus_5x -prop persist.sys.language=en -prop persist.sys.country=US -no-snapshot-load -no-snapshot-save -gpu on -camera-back emulated > emulator_port'
-                    sh 'emulator_port=$(cat emulator_port) && scripts/wait-for-emulator-to-boot.sh emulator-$emulator_port 20'
-                    sh 'emulator_port=$(cat emulator_port) && ./gradlew ginivision:targetedDebugAndroidTest -PpackageName=net.gini.android.vision -PtestTarget=emulator-$emulator_port'
+        stage('Tests') {
+            parallel {
+                stage('Unit Tests') {
+                            steps {
+                                sh './gradlew ginivision:test'
+                            }
+                            post {
+                                always {
+                                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true, reportDir: 'ginivision/build/reports/tests/testDebugUnitTest', reportFiles: 'index.html', reportName: 'Unit Test Results', reportTitles: ''])
+                                }
+                            }
                 }
-            }
-            post {
-                always {
-                    junit allowEmptyResults: true, testResults: 'ginivision/build/outputs/androidTest-results/targeted/*.xml'
-                    withEnv(["PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                        sh 'emulator_port=$(cat emulator_port) && adb -s emulator-$emulator_port emu kill || true'
-                        sh 'emulator_port=$(cat emulator_port) && scripts/wait-for-emulator-to-stop.sh emulator-$emulator_port 20'
+                stage('Instrumentation Tests - Phone') {
+                    steps {
+                        withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
+                            sh 'scripts/start-emulator-with-skin.sh "api-25-nexus-5x"_$(scripts/get-avd-name.sh) nexus_5x -prop persist.sys.language=en -prop persist.sys.country=US -no-snapshot-load -no-snapshot-save -gpu on -camera-back emulated > emulator_port'
+                            sh 'emulator_port=$(cat emulator_port) && scripts/wait-for-emulator-to-boot.sh emulator-$emulator_port 20'
+                            sh 'emulator_port=$(cat emulator_port) && ./gradlew ginivision:targetedDebugAndroidTest -PpackageName=net.gini.android.vision -PtestTarget=emulator-$emulator_port'
+                        }
                     }
-                    sh 'rm emulator_port || true'
-                }
-            }
-        }
-        stage('Instrumentation Tests - Tablet') {
-            steps {
-                withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                    sh 'scripts/start-emulator-with-skin.sh "api-25-nexus-9"_$(scripts/get-avd-name.sh) nexus_9 -prop persist.sys.language=en -prop persist.sys.country=US -no-snapshot-load -no-snapshot-save -gpu on -camera-back emulated > emulator_port'
-                    sh 'emulator_port=$(cat emulator_port) && scripts/wait-for-emulator-to-boot.sh emulator-$emulator_port 20'
-                    sh 'emulator_port=$(cat emulator_port) && ./gradlew ginivision:targetedDebugAndroidTest -PpackageName=net.gini.android.vision -PtestTarget=emulator-$emulator_port'
-                }
-            }
-            post {
-                always {
-                    junit allowEmptyResults: true, testResults: 'ginivision/build/outputs/androidTest-results/targeted/*.xml'
-                    withEnv(["PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
-                        sh 'emulator_port=$(cat emulator_port) && adb -s emulator-$emulator_port emu kill || true'
-                        sh 'emulator_port=$(cat emulator_port) && scripts/wait-for-emulator-to-stop.sh emulator-$emulator_port 20'
+                    post {
+                        always {
+                            junit allowEmptyResults: true, testResults: 'ginivision/build/outputs/androidTest-results/targeted/*.xml'
+                            withEnv(["PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
+                                sh 'emulator_port=$(cat emulator_port) && adb -s emulator-$emulator_port emu kill || true'
+                                sh 'emulator_port=$(cat emulator_port) && scripts/wait-for-emulator-to-stop.sh emulator-$emulator_port 20'
+                            }
+                            sh 'rm emulator_port || true'
+                        }
                     }
-                    sh 'rm emulator_port || true'
+                }
+                stage('Instrumentation Tests - Tablet') {
+                    steps {
+                        withEnv(["PATH+TOOLS=$ANDROID_HOME/tools", "PATH+TOOLS_BIN=$ANDROID_HOME/tools/bin", "PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
+                            sh 'scripts/start-emulator-with-skin.sh "api-25-nexus-9"_$(scripts/get-avd-name.sh) nexus_9 -prop persist.sys.language=en -prop persist.sys.country=US -no-snapshot-load -no-snapshot-save -gpu on -camera-back emulated > emulator_port'
+                            sh 'emulator_port=$(cat emulator_port) && scripts/wait-for-emulator-to-boot.sh emulator-$emulator_port 20'
+                            sh 'emulator_port=$(cat emulator_port) && ./gradlew ginivision:targetedDebugAndroidTest -PpackageName=net.gini.android.vision -PtestTarget=emulator-$emulator_port'
+                        }
+                    }
+                    post {
+                        always {
+                            junit allowEmptyResults: true, testResults: 'ginivision/build/outputs/androidTest-results/targeted/*.xml'
+                            withEnv(["PATH+PLATFORM_TOOLS=$ANDROID_HOME/platform-tools"]) {
+                                sh 'emulator_port=$(cat emulator_port) && adb -s emulator-$emulator_port emu kill || true'
+                                sh 'emulator_port=$(cat emulator_port) && scripts/wait-for-emulator-to-stop.sh emulator-$emulator_port 20'
+                            }
+                            sh 'rm emulator_port || true'
+                        }
+                    }
                 }
             }
         }
