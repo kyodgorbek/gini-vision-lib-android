@@ -77,9 +77,6 @@ pipeline {
                     }
                 }
             }
-            post {
-                sh 'rm emulator_port || true'
-            }
         }
         stage('Code Coverage') {
             steps {
