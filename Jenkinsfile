@@ -54,7 +54,6 @@ pipeline {
                                 sh 'emulator_port=$(cat emulator_port) && adb -s emulator-$emulator_port emu kill || true'
                                 sh 'emulator_port=$(cat emulator_port) && scripts/wait-for-emulator-to-stop.sh emulator-$emulator_port 20'
                             }
-                            sh 'rm emulator_port || true'
                         }
                     }
                 }
@@ -73,10 +72,13 @@ pipeline {
                                 sh 'emulator_port=$(cat emulator_port) && adb -s emulator-$emulator_port emu kill || true'
                                 sh 'emulator_port=$(cat emulator_port) && scripts/wait-for-emulator-to-stop.sh emulator-$emulator_port 20'
                             }
-                            sh 'rm emulator_port || true'
+
                         }
                     }
                 }
+            }
+            post {
+                sh 'rm emulator_port || true'
             }
         }
         stage('Code Coverage') {
