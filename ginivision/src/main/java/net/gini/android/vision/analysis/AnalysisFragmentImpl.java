@@ -372,9 +372,9 @@ class AnalysisFragmentImpl implements AnalysisFragmentInterface {
         view.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
+                view.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                 onViewLayoutFinished();
                 mFragmentHeight = view.getHeight();
-                view.getViewTreeObserver().removeGlobalOnLayoutListener(this);
             }
         });
         view.requestLayout();

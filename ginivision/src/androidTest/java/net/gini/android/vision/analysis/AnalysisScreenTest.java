@@ -12,7 +12,6 @@ import static net.gini.android.vision.test.Helpers.waitForWindowUpdate;
 
 import static org.junit.Assume.assumeTrue;
 
-import android.app.Instrumentation;
 import android.content.Intent;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
@@ -25,7 +24,6 @@ import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.view.Surface;
 import android.view.View;
-import android.widget.ProgressBar;
 
 import net.gini.android.vision.R;
 import net.gini.android.vision.document.DocumentFactory;
@@ -66,106 +64,6 @@ public class AnalysisScreenTest {
     @After
     public void tearDown() throws Exception {
         resetDeviceOrientation();
-    }
-
-    @Test
-    public void should_invokeAnalyzeDocument_whenLaunched() throws InterruptedException {
-        AnalysisActivityTestSpy activity = startAnalysisActivity(TEST_JPEG, 0);
-
-        // Allow the activity to run a little for listeners to be invoked
-        Thread.sleep(TEST_PAUSE_DURATION);
-
-        assertThat(activity.analyzeDocument).isNotNull();
-
-        assertAbout(document()).that(activity.analyzeDocument).isEqualToDocument(DocumentFactory.newDocumentFromPhoto(
-                PhotoFactory.newPhotoFromJpeg(TEST_JPEG, 0, "portrait", "phone", "camera")));
-    }
-
-    @Test
-    public void should_rotatePreview_accordingToOrientation() throws InterruptedException {
-        AnalysisActivityTestSpy activity = startAnalysisActivity(TEST_JPEG, 180);
-
-        // Allow the activity to run a little for listeners to be invoked
-        Thread.sleep(TEST_PAUSE_DURATION);
-
-        assertThat(activity.getFragment().getFragmentImpl().getImageDocument().getRotation()).isWithin(0.0f).of(180);
-    }
-
-    @Test
-    public void should_startIndeterminateProgressAnimation_ifRequested() throws InterruptedException {
-        final AnalysisActivityTestSpy activity = startAnalysisActivity(TEST_JPEG, 0);
-
-        Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
-
-        instrumentation.runOnMainSync(new Runnable() {
-            @Override
-            public void run() {
-                activity.startScanAnimation();
-            }
-        });
-
-        // Wait a little for the animation to start
-        Thread.sleep(TEST_PAUSE_DURATION);
-
-        ProgressBar progressBar = activity.getFragment().getFragmentImpl().getProgressActivity();
-        assertThat(progressBar.isIndeterminate()).isTrue();
-        assertThat(progressBar.getVisibility()).isEqualTo(View.VISIBLE);
-    }
-
-    @Test
-    public void should_stopIndeterminateProgressAnimation_ifRequested() throws InterruptedException {
-        final AnalysisActivityTestSpy activity = startAnalysisActivity(TEST_JPEG, 0);
-
-        Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
-
-        instrumentation.runOnMainSync(new Runnable() {
-            @Override
-            public void run() {
-                activity.startScanAnimation();
-            }
-        });
-
-        // Wait a little for the animation to start
-        Thread.sleep(TEST_PAUSE_DURATION);
-
-        instrumentation.runOnMainSync(new Runnable() {
-            @Override
-            public void run() {
-                activity.stopScanAnimation();
-            }
-        });
-
-        ProgressBar progressBar = activity.getFragment().getFragmentImpl().getProgressActivity();
-        assertThat(progressBar.isIndeterminate()).isTrue();
-        assertThat(progressBar.getVisibility()).isEqualTo(View.GONE);
-    }
-
-    @Test
-    public void should_invokeAddDataToResult_andFinish_whenDocumentAnalyzed_hasBeenCalled() throws InterruptedException {
-        AnalysisActivityTestSpy activity = startAnalysisActivity(TEST_JPEG, 0);
-
-        // Allow the activity to run a little for listeners to be invoked
-        Thread.sleep(TEST_PAUSE_DURATION);
-
-        activity.onDocumentAnalyzed();
-
-        assertThat(activity.addDataToResultIntent).isNotNull();
-        assertThat(activity.finishWasCalled).isTrue();
-    }
-
-    @Test
-    public void should_notInvokeAddDataToResult_whenFinished_withoutDocumentAnalyzed_beingCalled() throws InterruptedException {
-        AnalysisActivityTestSpy activity = startAnalysisActivity(TEST_JPEG, 0);
-
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
-
-        // Allow the activity to run a little for listeners to be invoked
-        Thread.sleep(TEST_PAUSE_DURATION);
-
-        activity.finish();
-
-        assertThat(activity.addDataToResultIntent).isNull();
-        assertThat(activity.finishWasCalled).isTrue();
     }
 
     @Test
@@ -287,18 +185,6 @@ public class AnalysisScreenTest {
 
         Espresso.onView(ViewMatchers.withText("Something happened"))
                 .check(ViewAssertions.matches(ViewMatchers.isDisplayed()));
-    }
-
-    @Test
-    public void should_notInvokeAnalyzeDocument_whenAnalysisErrorMessage_wasGiven() throws InterruptedException {
-        Intent intent = getAnalysisActivityIntentWithDocument(TEST_JPEG, 0);
-        intent.putExtra(AnalysisActivity.EXTRA_IN_DOCUMENT_ANALYSIS_ERROR_MESSAGE, "Something happened");
-        AnalysisActivityTestSpy activity = mActivityTestRule.launchActivity(intent);
-
-        // Allow the activity to run a little for the error message to be shown
-        Thread.sleep(TEST_PAUSE_DURATION);
-
-        assertThat(activity.analyzeDocument).isNull();
     }
 
     @Test
