@@ -23,7 +23,6 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 
 /**
  * Created by aszotyori on 14.11.17.

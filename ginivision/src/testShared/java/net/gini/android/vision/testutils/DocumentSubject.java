@@ -7,13 +7,10 @@ import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
 
 import net.gini.android.vision.Document;
-import net.gini.android.vision.internal.camera.photo.JpegByteArraySubject;
 
 import java.util.Arrays;
 
 public class DocumentSubject extends Subject<DocumentSubject, Document> {
-
-    private final JpegByteArraySubject mJpegByteArraySubject;
 
     public static SubjectFactory<DocumentSubject, Document> document() {
         return new SubjectFactory<DocumentSubject, Document>() {
@@ -29,40 +26,23 @@ public class DocumentSubject extends Subject<DocumentSubject, Document> {
             @Nullable final Document subject) {
         super(failureStrategy, subject);
         isNotNull();
-        //noinspection ConstantConditions
-        mJpegByteArraySubject = new JpegByteArraySubject(failureStrategy, subject.getJpeg());
     }
 
     public void isEqualToDocument(Document other) {
         Document document = getSubject();
         if (document == null) {
             fail("is equal to another Document - subject is null");
+            return;
         }
         if (other == null) {
             fail("is equal to another Document - comparing to null");
+            return;
         }
 
-        if (!Arrays.equals(document.getJpeg(), other.getJpeg())) {
+        if (!Arrays.equals(document.getData(), other.getData())) {
             fail("is equal to Document " + other + " - contain different bitmaps");
         } else if (document.getRotationForDisplay() != other.getRotationForDisplay()) {
             fail("is equal to Document " + other + " - have different rotation");
         }
-    }
-
-    public void hasSameContentIdInUserCommentAs(Document other) {
-        isNotNull();
-        String verb = "has same User Comment ContentId";
-
-        if (other == null) {
-            fail(verb, (Object) null);
-            return;
-        }
-
-        mJpegByteArraySubject.hasSameContentIdInUserCommentAs(other.getJpeg());
-    }
-
-    public void hasRotationDeltaInUserComment(final int rotationDelta) {
-        isNotNull();
-        mJpegByteArraySubject.hasRotationDeltaInUserComment(rotationDelta);
     }
 }

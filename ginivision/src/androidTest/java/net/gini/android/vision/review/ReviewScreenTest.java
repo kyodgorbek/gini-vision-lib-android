@@ -3,8 +3,8 @@ package net.gini.android.vision.review;
 import static com.google.common.truth.Truth.assertAbout;
 import static com.google.common.truth.Truth.assertThat;
 
-import static net.gini.android.vision.testutils.DocumentSubject.document;
 import static net.gini.android.vision.testutils.Helpers.createDocument;
+import static net.gini.android.vision.testutils.ImageDocumentSubject.imageDocument;
 import static net.gini.android.vision.testutils.InstrumentationHelpers.getTestJpegAsset;
 import static net.gini.android.vision.testutils.InstrumentationHelpers.isTablet;
 import static net.gini.android.vision.testutils.InstrumentationHelpers.prepareLooper;
@@ -34,6 +34,7 @@ import android.view.Surface;
 import net.gini.android.vision.Document;
 import net.gini.android.vision.R;
 import net.gini.android.vision.analysis.AnalysisActivityTestSpy;
+import net.gini.android.vision.document.ImageDocument;
 import net.gini.android.vision.testutils.CurrentActivityTestRule;
 
 import org.junit.After;
@@ -426,8 +427,8 @@ public class ReviewScreenTest {
         // Allow the activity to run a little for listeners to be invoked
         Thread.sleep(PAUSE_DURATION);
 
-        assertAbout(document()).that(documentToAnalyze.get()).hasSameContentIdInUserCommentAs(
-                documentToProceedWith.get());
+        assertAbout(imageDocument()).that((ImageDocument) documentToAnalyze.get()).hasSameContentIdInUserCommentAs(
+                (ImageDocument) documentToProceedWith.get());
     }
 
     @Test
@@ -447,7 +448,7 @@ public class ReviewScreenTest {
         // Allow the activity to run a little for listeners to be invoked
         Thread.sleep(PAUSE_DURATION);
 
-        assertAbout(document()).that(documentToAnalyze.get()).hasRotationDeltaInUserComment(0);
+        assertAbout(imageDocument()).that((ImageDocument) documentToAnalyze.get()).hasRotationDeltaInUserComment(0);
     }
 
     @Test
@@ -475,7 +476,7 @@ public class ReviewScreenTest {
         // Allow the activity to run a little for listeners to be invoked
         Thread.sleep(PAUSE_DURATION);
 
-        assertAbout(document()).that(documentToProceedWith.get()).hasRotationDeltaInUserComment(90);
+        assertAbout(imageDocument()).that((ImageDocument) documentToProceedWith.get()).hasRotationDeltaInUserComment(90);
     }
 
     @Test
@@ -506,7 +507,7 @@ public class ReviewScreenTest {
         // Allow the activity to run a little for listeners to be invoked
         Thread.sleep(PAUSE_DURATION);
 
-        assertAbout(document()).that(documentToProceedWith.get()).hasRotationDeltaInUserComment(180);
+        assertAbout(imageDocument()).that((ImageDocument) documentToProceedWith.get()).hasRotationDeltaInUserComment(180);
     }
 
     @Test
@@ -536,7 +537,7 @@ public class ReviewScreenTest {
         // Allow the activity to run a little for listeners to be invoked
         Thread.sleep(PAUSE_DURATION);
 
-        assertAbout(document()).that(documentToProceedWith.get()).hasRotationDeltaInUserComment(90);
+        assertAbout(imageDocument()).that((ImageDocument) documentToProceedWith.get()).hasRotationDeltaInUserComment(90);
     }
 
     @Test
@@ -576,7 +577,8 @@ public class ReviewScreenTest {
             }
         });
 
-        assertAbout(document()).that(documentToAnalyzeAfterOrientationChange.get()).hasRotationDeltaInUserComment(180);
+        assertAbout(imageDocument()).that(
+                (ImageDocument) documentToAnalyzeAfterOrientationChange.get()).hasRotationDeltaInUserComment(180);
         assertThat(documentToAnalyzeAfterOrientationChange.get().getRotationForDisplay()).isEqualTo(270);
         assertThat(activity.getFragment().getFragmentImpl().getImageDocument().getRotation()).isWithin(0.0f).of(270);
     }
