@@ -1,4 +1,4 @@
-package net.gini.android.vision.test;
+package net.gini.android.vision.testutils;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 

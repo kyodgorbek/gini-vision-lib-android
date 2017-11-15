@@ -3,9 +3,9 @@ package net.gini.android.vision.internal.camera.photo;
 import static com.google.common.truth.Truth.assertAbout;
 import static com.google.common.truth.Truth.assertThat;
 
-import static net.gini.android.vision.test.Helpers.doParcelingRoundTrip;
-import static net.gini.android.vision.test.Helpers.getTestJpeg;
-import static net.gini.android.vision.test.PhotoSubject.photo;
+import static net.gini.android.vision.testutils.Helpers.doParcelingRoundTrip;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.getTestJpegAsset;
+import static net.gini.android.vision.testutils.PhotoSubject.photo;
 
 import android.support.test.runner.AndroidJUnit4;
 
@@ -27,7 +27,7 @@ public class PhotoTest {
 
     @BeforeClass
     public static void setupClass() throws IOException {
-        TEST_JPEG = getTestJpeg();
+        TEST_JPEG = getTestJpegAsset();
     }
 
     @AfterClass

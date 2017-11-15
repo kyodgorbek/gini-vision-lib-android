@@ -2,7 +2,7 @@ package net.gini.android.vision.onboarding;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static net.gini.android.vision.test.Helpers.doParcelingRoundTrip;
+import static net.gini.android.vision.testutils.Helpers.doParcelingRoundTrip;
 
 import android.support.test.runner.AndroidJUnit4;
 

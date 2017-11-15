@@ -2,7 +2,7 @@ package net.gini.android.vision.internal.camera.photo;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static net.gini.android.vision.test.Helpers.getTestJpeg;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.getTestJpegAsset;
 
 import android.support.test.runner.AndroidJUnit4;
 
@@ -14,7 +14,7 @@ public class ExifReaderTest {
 
     @Test
     public void should_readUserComment() throws Exception {
-        final byte[] testJpeg = getTestJpeg("remslip-valid-user-comment.jpeg");
+        final byte[] testJpeg = getTestJpegAsset("remslip-valid-user-comment.jpeg");
         final ExifReader exifReader = ExifReader.forJpeg(testJpeg);
         assertThat(exifReader.getUserComment()).isEqualTo("This is valid");
     }
@@ -22,14 +22,14 @@ public class ExifReaderTest {
     @Test
     public void should_readUserComment_ifLength_isTooShort() throws Exception {
         // Minimum length is 8 bytes (character code length), following image has 5 bytes
-        final byte[] testJpeg = getTestJpeg("remslip-malformed-user-comment.jpeg");
+        final byte[] testJpeg = getTestJpegAsset("remslip-malformed-user-comment.jpeg");
         final ExifReader exifReader = ExifReader.forJpeg(testJpeg);
         assertThat(exifReader.getUserComment()).isEqualTo("short");
     }
 
     @Test
     public void should_throwException_ifMetadata_wasMissing() throws Exception {
-        final byte[] testJpeg = getTestJpeg("remslip-no-metadata.jpeg");
+        final byte[] testJpeg = getTestJpegAsset("remslip-no-metadata.jpeg");
         ExifReaderException exception = null;
         try {
             ExifReader.forJpeg(testJpeg);
@@ -43,7 +43,7 @@ public class ExifReaderTest {
     @Test
     public void should_throwException_ifUserComment_wasMissing() throws Exception {
         // Given
-        final byte[] testJpeg = getTestJpeg("remslip-no-user-comment.jpeg");
+        final byte[] testJpeg = getTestJpegAsset("remslip-no-user-comment.jpeg");
         final ExifReader exifReader = ExifReader.forJpeg(testJpeg);
         ExifReaderException exception = null;
         try {
@@ -72,7 +72,7 @@ public class ExifReaderTest {
     @Test
     public void should_returnValue_forKey_inUserCommentCSV() throws Exception {
         // Given
-        final byte[] jpeg = getTestJpeg();
+        final byte[] jpeg = getTestJpegAsset();
         final ExifReader exifReader = ExifReader.forJpeg(jpeg);
         // When
         final String value = exifReader.getValueForKeyFromUserComment("OSVer",
@@ -85,7 +85,7 @@ public class ExifReaderTest {
     @Test
     public void should_returnNull_ifKey_wasNotFound_inUserCommentCSV() throws Exception {
         // Given
-        final byte[] jpeg = getTestJpeg();
+        final byte[] jpeg = getTestJpegAsset();
         final ExifReader exifReader = ExifReader.forJpeg(jpeg);
         // When
         final String value = exifReader.getValueForKeyFromUserComment("unknownKey",
@@ -97,7 +97,7 @@ public class ExifReaderTest {
     @Test
     public void should_returnNull_ifUserCommentCSV_isEmpty() throws Exception {
         // Given
-        final byte[] jpeg = getTestJpeg();
+        final byte[] jpeg = getTestJpegAsset();
         final ExifReader exifReader = ExifReader.forJpeg(jpeg);
         // When
         final String value = exifReader.getValueForKeyFromUserComment("", "");
@@ -108,7 +108,7 @@ public class ExifReaderTest {
     @Test
     public void should_returnNull_ifUserCommentCSV_isMalformed() throws Exception {
         // Given
-        final byte[] jpeg = getTestJpeg();
+        final byte[] jpeg = getTestJpegAsset();
         final ExifReader exifReader = ExifReader.forJpeg(jpeg);
         // When
         final String value = exifReader.getValueForKeyFromUserComment("OSVer", ",Key1=OSVer=,");

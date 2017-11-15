@@ -2,7 +2,7 @@ package net.gini.android.vision.requirements;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import static net.gini.android.vision.test.PermissionsHelper.grantCameraPermission;
+import static net.gini.android.vision.testutils.PermissionsHelper.grantCameraPermission;
 
 import android.hardware.Camera;
 import android.support.test.InstrumentationRegistry;

@@ -2,15 +2,13 @@ package net.gini.android.vision.camera;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static net.gini.android.vision.OncePerInstallEventStoreHelper
-        .clearOnboardingWasShownPreference;
-import static net.gini.android.vision.OncePerInstallEventStoreHelper
-        .setOnboardingWasShownPreference;
-import static net.gini.android.vision.test.EspressoMatchers.hasComponent;
-import static net.gini.android.vision.test.Helpers.isTablet;
-import static net.gini.android.vision.test.Helpers.prepareLooper;
-import static net.gini.android.vision.test.Helpers.resetDeviceOrientation;
-import static net.gini.android.vision.test.Helpers.waitForWindowUpdate;
+import static net.gini.android.vision.OncePerInstallEventStoreHelper.clearOnboardingWasShownPreference;
+import static net.gini.android.vision.OncePerInstallEventStoreHelper.setOnboardingWasShownPreference;
+import static net.gini.android.vision.testutils.EspressoMatchers.hasComponent;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.prepareLooper;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.isTablet;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.resetDeviceOrientation;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.waitForWindowUpdate;
 
 import static org.junit.Assume.assumeTrue;
 import static org.mockito.Matchers.any;
@@ -49,7 +47,7 @@ import net.gini.android.vision.onboarding.OnboardingActivity;
 import net.gini.android.vision.onboarding.OnboardingPage;
 import net.gini.android.vision.review.ReviewActivity;
 import net.gini.android.vision.review.ReviewActivityTestSpy;
-import net.gini.android.vision.test.EspressoAssertions;
+import net.gini.android.vision.testutils.EspressoAssertions;
 
 import org.hamcrest.Matchers;
 import org.junit.After;

@@ -1,7 +1,7 @@
 package net.gini.android.vision.requirements;
 
 import static com.google.common.truth.Truth.assertThat;
-import static net.gini.android.vision.requirements.TestUtil.createSize;
+import static net.gini.android.vision.requirements.SizeUtil.createSize;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 
 import net.gini.android.vision.Document;
+import net.gini.android.vision.review.ReviewActivity;
 
 public class ReviewActivityTestSpy extends ReviewActivity {
 

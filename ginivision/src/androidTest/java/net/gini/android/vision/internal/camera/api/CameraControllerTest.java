@@ -4,8 +4,8 @@ import static android.support.test.InstrumentationRegistry.getTargetContext;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static net.gini.android.vision.test.Helpers.prepareLooper;
-import static net.gini.android.vision.test.PermissionsHelper.grantCameraPermission;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.prepareLooper;
+import static net.gini.android.vision.testutils.PermissionsHelper.grantCameraPermission;
 
 import android.content.Intent;
 import android.hardware.Camera;

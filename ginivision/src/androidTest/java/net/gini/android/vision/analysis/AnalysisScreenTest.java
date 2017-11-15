@@ -3,12 +3,12 @@ package net.gini.android.vision.analysis;
 import static com.google.common.truth.Truth.assertAbout;
 import static com.google.common.truth.Truth.assertThat;
 
-import static net.gini.android.vision.test.DocumentSubject.document;
-import static net.gini.android.vision.test.Helpers.createDocument;
-import static net.gini.android.vision.test.Helpers.getTestJpeg;
-import static net.gini.android.vision.test.Helpers.isTablet;
-import static net.gini.android.vision.test.Helpers.resetDeviceOrientation;
-import static net.gini.android.vision.test.Helpers.waitForWindowUpdate;
+import static net.gini.android.vision.testutils.DocumentSubject.document;
+import static net.gini.android.vision.testutils.Helpers.createDocument;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.getTestJpegAsset;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.isTablet;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.resetDeviceOrientation;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.waitForWindowUpdate;
 
 import static org.junit.Assume.assumeTrue;
 
@@ -53,7 +53,7 @@ public class AnalysisScreenTest {
 
     @BeforeClass
     public static void setupClass() throws IOException {
-        TEST_JPEG = getTestJpeg();
+        TEST_JPEG = getTestJpegAsset();
     }
 
     @AfterClass

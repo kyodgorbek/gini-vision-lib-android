@@ -1,4 +1,4 @@
-package net.gini.android.vision.test;
+package net.gini.android.vision.testutils;
 
 import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static android.support.test.InstrumentationRegistry.getTargetContext;

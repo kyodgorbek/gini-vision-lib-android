@@ -1,13 +1,12 @@
-package net.gini.android.vision;
+package net.gini.android.vision.testutils;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.support.annotation.Nullable;
 
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
 
+import net.gini.android.vision.Document;
 import net.gini.android.vision.internal.camera.photo.JpegByteArraySubject;
 
 import java.util.Arrays;
@@ -42,11 +41,6 @@ public class DocumentSubject extends Subject<DocumentSubject, Document> {
         if (other == null) {
             fail("is equal to another Document - comparing to null");
         }
-
-        //noinspection ConstantConditions - null check done above
-        Bitmap bitmap = BitmapFactory.decodeByteArray(document.getJpeg(), 0, document.getJpeg().length);
-        //noinspection ConstantConditions - null check done above
-        Bitmap otherBitmap = BitmapFactory.decodeByteArray(other.getJpeg(), 0, other.getJpeg().length);
 
         if (!Arrays.equals(document.getJpeg(), other.getJpeg())) {
             fail("is equal to Document " + other + " - contain different bitmaps");

@@ -3,9 +3,9 @@ package net.gini.android.vision.analysis;
 import static com.google.common.truth.Truth.assertAbout;
 import static com.google.common.truth.Truth.assertThat;
 
-import static net.gini.android.vision.DocumentSubject.document;
-import static net.gini.android.vision.Helpers.createDocument;
-import static net.gini.android.vision.Helpers.getTestJpeg;
+import static net.gini.android.vision.testutils.DocumentSubject.document;
+import static net.gini.android.vision.testutils.Helpers.createDocument;
+import static net.gini.android.vision.testutils.RobolectricHelpers.getTestJpegJavaResource;
 
 import android.content.Intent;
 import android.view.View;
@@ -23,6 +23,7 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * Created by aszotyori on 14.11.17.
@@ -34,14 +35,13 @@ import java.io.IOException;
 public class AnalysisScreenRoboTest {
 
     @Test
-    public void should_invokeAnalyzeDocument_whenLaunched() throws IOException {
-        final Document document = createDocument(getTestJpeg(), 0, "portrait", "phone",
+    public void should_invokeAnalyzeDocument_whenLaunched()
+            throws IOException {
+        final Document document = createDocument(getTestJpegJavaResource(), 0, "portrait", "phone",
                         "camera");
         AnalysisActivityTestSpy activity = startAnalysisActivity(document);
 
         assertThat(activity.analyzeDocument).isNotNull();
-
-
         assertAbout(document()).that(activity.analyzeDocument).isEqualToDocument(document);
     }
 
@@ -57,11 +57,15 @@ public class AnalysisScreenRoboTest {
 
     @Test
     public void should_rotatePreview_accordingToOrientation() throws IOException {
-        AnalysisActivityTestSpy activity = startAnalysisActivity(getTestJpeg(), 180);
+        AnalysisActivityTestSpy activity = startAnalysisActivity(180);
 
         assertThat(
                 activity.getFragment().getFragmentImpl().getImageDocument().getRotation()).isWithin(
                 0.0f).of(180);
+    }
+
+    private AnalysisActivityTestSpy startAnalysisActivity(int orientation) throws IOException {
+        return startAnalysisActivity(getTestJpegJavaResource(), orientation);
     }
 
     private AnalysisActivityTestSpy startAnalysisActivity(byte[] jpeg, int orientation) {
@@ -70,7 +74,7 @@ public class AnalysisScreenRoboTest {
 
     @Test
     public void should_startIndeterminateProgressAnimation_ifRequested() throws IOException {
-        final AnalysisActivityTestSpy activity = startAnalysisActivity(getTestJpeg(), 0);
+        final AnalysisActivityTestSpy activity = startAnalysisActivity(0);
 
         activity.startScanAnimation();
 
@@ -81,7 +85,7 @@ public class AnalysisScreenRoboTest {
 
     @Test
     public void should_stopIndeterminateProgressAnimation_ifRequested() throws IOException {
-        final AnalysisActivityTestSpy activity = startAnalysisActivity(getTestJpeg(), 0);
+        final AnalysisActivityTestSpy activity = startAnalysisActivity(0);
 
         activity.startScanAnimation();
 
@@ -94,7 +98,7 @@ public class AnalysisScreenRoboTest {
 
     @Test
     public void should_invokeAddDataToResult_andFinish_whenDocumentAnalyzed_hasBeenCalled() throws IOException {
-        AnalysisActivityTestSpy activity = startAnalysisActivity(getTestJpeg(), 0);
+        AnalysisActivityTestSpy activity = startAnalysisActivity(0);
 
         activity.onDocumentAnalyzed();
 
@@ -104,7 +108,7 @@ public class AnalysisScreenRoboTest {
 
     @Test
     public void should_notInvokeAddDataToResult_whenFinished_withoutDocumentAnalyzed_beingCalled() throws IOException {
-        AnalysisActivityTestSpy activity = startAnalysisActivity(getTestJpeg(), 0);
+        AnalysisActivityTestSpy activity = startAnalysisActivity(0);
 
         activity.finish();
 
@@ -115,7 +119,7 @@ public class AnalysisScreenRoboTest {
     @Test
     public void should_notInvokeAnalyzeDocument_whenAnalysisErrorMessage_wasGiven()
             throws IOException {
-        Intent intent = getAnalysisActivityIntentWithDocument(getTestJpeg(), 0);
+        Intent intent = getAnalysisActivityIntentWithDocument(getTestJpegJavaResource(), 0);
         intent.putExtra(AnalysisActivity.EXTRA_IN_DOCUMENT_ANALYSIS_ERROR_MESSAGE,
                 "Something happened");
         AnalysisActivityTestSpy activity = Robolectric.buildActivity(

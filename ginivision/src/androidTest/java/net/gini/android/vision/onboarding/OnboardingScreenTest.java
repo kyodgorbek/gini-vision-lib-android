@@ -2,9 +2,9 @@ package net.gini.android.vision.onboarding;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static net.gini.android.vision.test.Helpers.isTablet;
-import static net.gini.android.vision.test.Helpers.resetDeviceOrientation;
-import static net.gini.android.vision.test.Helpers.waitForWindowUpdate;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.isTablet;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.resetDeviceOrientation;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.waitForWindowUpdate;
 
 import static org.junit.Assume.assumeTrue;
 
@@ -24,7 +24,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.view.Surface;
 
 import net.gini.android.vision.R;
-import net.gini.android.vision.test.EspressoMatchers;
+import net.gini.android.vision.testutils.EspressoMatchers;
 
 import org.junit.After;
 import org.junit.Rule;

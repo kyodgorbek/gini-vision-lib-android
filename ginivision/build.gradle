@@ -30,6 +30,15 @@ android {
         exclude 'META-INF/maven/com.google.guava/guava/pom.properties'
         exclude 'META-INF/maven/com.google.guava/guava/pom.xml'
     }
+
+    sourceSets {
+        androidTest {
+            java.srcDirs += "$projectDir/src/testShared/java"
+        }
+        test {
+            java.srcDirs += "$projectDir/src/testShared/java"
+        }
+    }
 }
 
 dependencies {

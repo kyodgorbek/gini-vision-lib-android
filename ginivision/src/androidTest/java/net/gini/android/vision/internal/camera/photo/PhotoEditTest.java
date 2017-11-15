@@ -3,8 +3,8 @@ package net.gini.android.vision.internal.camera.photo;
 import static com.google.common.truth.Truth.assertAbout;
 import static com.google.common.truth.Truth.assertThat;
 
-import static net.gini.android.vision.test.Helpers.getTestJpeg;
-import static net.gini.android.vision.test.PhotoSubject.photo;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.getTestJpegAsset;
+import static net.gini.android.vision.testutils.PhotoSubject.photo;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -62,7 +62,7 @@ public class PhotoEditTest {
     }
 
     private Photo getPhoto() throws IOException {
-        final byte[] jpeg = getTestJpeg();
+        final byte[] jpeg = getTestJpegAsset();
         return PhotoFactory.newPhotoFromJpeg(jpeg, 0, "portrait", "phone", "camera");
     }
 

@@ -1,4 +1,4 @@
-package net.gini.android.vision.test;
+package net.gini.android.vision.testutils;
 
 import android.support.annotation.Nullable;
 
