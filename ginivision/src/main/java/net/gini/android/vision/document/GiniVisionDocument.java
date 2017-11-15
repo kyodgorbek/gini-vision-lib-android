@@ -13,8 +13,6 @@ import net.gini.android.vision.internal.camera.photo.ParcelableMemoryCache;
 import net.gini.android.vision.internal.util.UriReaderAsyncTask;
 import net.gini.android.vision.util.IntentHelper;
 
-import java.util.Arrays;
-
 /**
  * @exclude
  */
@@ -161,7 +159,7 @@ public class GiniVisionDocument implements Document {
     public String toString() {
         return "GiniVisionDocument{" +
                 "mType=" + mType +
-                ", mData=" + Arrays.toString(mData) +
+                ", mData=" + (mData != null ? mData : "null") +
                 ", mIsReviewable=" + mIsReviewable +
                 ", mIsImported=" + mIsImported +
                 ", mIntent=" + mIntent +

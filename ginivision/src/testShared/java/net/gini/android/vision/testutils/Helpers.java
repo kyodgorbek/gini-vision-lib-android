@@ -1,5 +1,6 @@
 package net.gini.android.vision.testutils;
 
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -21,6 +22,10 @@ public class Helpers {
             String deviceType, String source) {
         return DocumentFactory.newDocumentFromPhoto(
                 PhotoFactory.newPhotoFromJpeg(jpeg, orientation, deviceOrientation, deviceType, source));
+    }
+
+    public static boolean isRobolectricTest() {
+        return "robolectric".equals(Build.FINGERPRINT);
     }
 
 }
