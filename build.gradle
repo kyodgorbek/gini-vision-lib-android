@@ -54,6 +54,7 @@ def supportLibVersion = '26.0.1'
 def mockitoVersion = '2.6.3'
 def testSupportLibVersion = '1.0.1'
 def espressoVersion = '3.0.1'
+def robolectricVersion = '3.3.2'
 
 ext.deps = [
         // Android
@@ -78,6 +79,5 @@ ext.deps = [
         supportTestEspressoIntents: "com.android.support.test.espresso:espresso-intents:$espressoVersion",
         supportTestUiAutomator: 'com.android.support.test.uiautomator:uiautomator-v18:2.1.2',
         supportMultidex: 'com.android.support:multidex:1.0.1',
-        roboelectric: "org.robolectric:robolectric:3.5.1",
-        roboelectricSupportV4: "org.robolectric:shadows-supportv4:3.5.1"
+        robolectric: "org.robolectric:robolectric:$robolectricVersion"
 ]

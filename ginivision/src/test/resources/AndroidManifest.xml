@@ -12,6 +12,10 @@
         <activity
             android:name="net.gini.android.vision.analysis.AnalysisActivityTestSpy"
             android:theme="@style/GiniVisionTheme" />
+        <activity
+            android:name=".camera.CameraActivity"
+            android:label="@string/gv_title_camera"
+            android:theme="@style/GiniVisionTheme" />
     </application>
 
 </manifest>

@@ -56,8 +56,7 @@ dependencies {
     testCompile deps.junit
     testCompile deps.truth
     testCompile deps.mockito
-    testCompile deps.roboelectric
-    testCompile deps.roboelectricSupportV4
+    testCompile deps.robolectric
 
     androidTestCompile deps.supportTestRunner
     androidTestCompile deps.truth
