@@ -34,10 +34,21 @@ import java.io.IOException;
 public class AnalysisScreenRoboTest {
 
     @Test
+    public void should_invokeAddDataToResult_andFinish_whenDocumentAnalyzed_hasBeenCalled()
+            throws IOException {
+        AnalysisActivityTestSpy activity = startAnalysisActivity(0);
+
+        activity.onDocumentAnalyzed();
+
+        assertThat(activity.addDataToResultIntent).isNotNull();
+        assertThat(activity.finishWasCalled).isTrue();
+    }
+
+    @Test
     public void should_invokeAnalyzeDocument_whenLaunched()
             throws IOException {
         final Document document = createDocument(getTestJpegJavaResource(), 0, "portrait", "phone",
-                        "camera");
+                "camera");
         AnalysisActivityTestSpy activity = startAnalysisActivity(document);
 
         assertThat(activity.analyzeDocument).isNotNull();
@@ -55,58 +66,8 @@ public class AnalysisScreenRoboTest {
     }
 
     @Test
-    public void should_rotatePreview_accordingToOrientation() throws IOException {
-        AnalysisActivityTestSpy activity = startAnalysisActivity(180);
-
-        assertThat(
-                activity.getFragment().getFragmentImpl().getImageDocument().getRotation()).isWithin(
-                0.0f).of(180);
-    }
-
-    private AnalysisActivityTestSpy startAnalysisActivity(int orientation) throws IOException {
-        return startAnalysisActivity(getTestJpegJavaResource(), orientation);
-    }
-
-    private AnalysisActivityTestSpy startAnalysisActivity(byte[] jpeg, int orientation) {
-        return startAnalysisActivity(createDocument(jpeg, orientation, "portrait", "phone", "camera"));
-    }
-
-    @Test
-    public void should_startIndeterminateProgressAnimation_ifRequested() throws IOException {
-        final AnalysisActivityTestSpy activity = startAnalysisActivity(0);
-
-        activity.startScanAnimation();
-
-        ProgressBar progressBar = activity.getFragment().getFragmentImpl().getProgressActivity();
-        assertThat(progressBar.isIndeterminate()).isTrue();
-        assertThat(progressBar.getVisibility()).isEqualTo(View.VISIBLE);
-    }
-
-    @Test
-    public void should_stopIndeterminateProgressAnimation_ifRequested() throws IOException {
-        final AnalysisActivityTestSpy activity = startAnalysisActivity(0);
-
-        activity.startScanAnimation();
-
-        activity.stopScanAnimation();
-
-        ProgressBar progressBar = activity.getFragment().getFragmentImpl().getProgressActivity();
-        assertThat(progressBar.isIndeterminate()).isTrue();
-        assertThat(progressBar.getVisibility()).isEqualTo(View.GONE);
-    }
-
-    @Test
-    public void should_invokeAddDataToResult_andFinish_whenDocumentAnalyzed_hasBeenCalled() throws IOException {
-        AnalysisActivityTestSpy activity = startAnalysisActivity(0);
-
-        activity.onDocumentAnalyzed();
-
-        assertThat(activity.addDataToResultIntent).isNotNull();
-        assertThat(activity.finishWasCalled).isTrue();
-    }
-
-    @Test
-    public void should_notInvokeAddDataToResult_whenFinished_withoutDocumentAnalyzed_beingCalled() throws IOException {
+    public void should_notInvokeAddDataToResult_whenFinished_withoutDocumentAnalyzed_beingCalled()
+            throws IOException {
         AnalysisActivityTestSpy activity = startAnalysisActivity(0);
 
         activity.finish();
@@ -134,5 +95,47 @@ public class AnalysisScreenRoboTest {
         intent.putExtra(AnalysisActivity.EXTRA_IN_DOCUMENT,
                 createDocument(jpeg, orientation, "portrait", "phone", "camera"));
         return intent;
+    }
+
+    @Test
+    public void should_rotatePreview_accordingToOrientation() throws IOException {
+        AnalysisActivityTestSpy activity = startAnalysisActivity(180);
+
+        assertThat(
+                activity.getFragment().getFragmentImpl().getImageDocument().getRotation()).isWithin(
+                0.0f).of(180);
+    }
+
+    private AnalysisActivityTestSpy startAnalysisActivity(int orientation) throws IOException {
+        return startAnalysisActivity(getTestJpegJavaResource(), orientation);
+    }
+
+    private AnalysisActivityTestSpy startAnalysisActivity(byte[] jpeg, int orientation) {
+        return startAnalysisActivity(
+                createDocument(jpeg, orientation, "portrait", "phone", "camera"));
+    }
+
+    @Test
+    public void should_startIndeterminateProgressAnimation_ifRequested() throws IOException {
+        final AnalysisActivityTestSpy activity = startAnalysisActivity(0);
+
+        activity.startScanAnimation();
+
+        ProgressBar progressBar = activity.getFragment().getFragmentImpl().getProgressActivity();
+        assertThat(progressBar.isIndeterminate()).isTrue();
+        assertThat(progressBar.getVisibility()).isEqualTo(View.VISIBLE);
+    }
+
+    @Test
+    public void should_stopIndeterminateProgressAnimation_ifRequested() throws IOException {
+        final AnalysisActivityTestSpy activity = startAnalysisActivity(0);
+
+        activity.startScanAnimation();
+
+        activity.stopScanAnimation();
+
+        ProgressBar progressBar = activity.getFragment().getFragmentImpl().getProgressActivity();
+        assertThat(progressBar.isIndeterminate()).isTrue();
+        assertThat(progressBar.getVisibility()).isEqualTo(View.GONE);
     }
 }
