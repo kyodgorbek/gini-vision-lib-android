@@ -367,9 +367,14 @@ class ReviewFragmentImpl implements ReviewFragmentInterface {
     }
 
     private void onRotateClicked() {
+        rotateImage(true);
+    }
+
+    @VisibleForTesting
+    void rotateImage(final boolean allowAnimations) {
         final int oldRotation = mCurrentRotation;
         mCurrentRotation += 90;
-        rotateImageView(mCurrentRotation, true);
+        rotateImageView(mCurrentRotation, allowAnimations);
         mDocumentWasModified = true;
         applyRotationToPhoto(new PhotoEdit.PhotoEditCallback() {
             @Override
@@ -394,7 +399,8 @@ class ReviewFragmentImpl implements ReviewFragmentInterface {
         });
     }
 
-    private void onNextClicked() {
+    @VisibleForTesting
+    void onNextClicked() {
         mNextClicked = true;
         if (!mDocumentWasModified) {
             LOG.debug("Document wasn't modified");
