@@ -49,7 +49,7 @@
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="net.gini.android.vision.test.PermissionsHelper"/>
+        <Class name="net.gini.android.vision.testutils.PermissionsHelper"/>
         <Method name="executeShellCommand"/>
         <Bug pattern="DM_DEFAULT_ENCODING" />
     </Match>
