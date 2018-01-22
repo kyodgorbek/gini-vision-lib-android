@@ -3,6 +3,7 @@ package net.gini.android.vision.internal.camera.photo;
 import static com.google.common.truth.Truth.assertThat;
 
 import static net.gini.android.vision.testutils.InstrumentationHelpers.getTestJpegAsset;
+import static net.gini.android.vision.testutils.InstrumentationHelpers.loadAsset;
 
 import android.support.test.runner.AndroidJUnit4;
 
@@ -14,7 +15,7 @@ public class ExifReaderTest {
 
     @Test
     public void should_readUserComment() throws Exception {
-        final byte[] testJpeg = getTestJpegAsset("remslip-valid-user-comment.jpeg");
+        final byte[] testJpeg = loadAsset("remslip-valid-user-comment.jpeg");
         final ExifReader exifReader = ExifReader.forJpeg(testJpeg);
         assertThat(exifReader.getUserComment()).isEqualTo("This is valid");
     }
@@ -22,18 +23,18 @@ public class ExifReaderTest {
     @Test
     public void should_readUserComment_ifLength_isTooShort() throws Exception {
         // Minimum length is 8 bytes (character code length), following image has 5 bytes
-        final byte[] testJpeg = getTestJpegAsset("remslip-malformed-user-comment.jpeg");
+        final byte[] testJpeg = loadAsset("remslip-malformed-user-comment.jpeg");
         final ExifReader exifReader = ExifReader.forJpeg(testJpeg);
         assertThat(exifReader.getUserComment()).isEqualTo("short");
     }
 
     @Test
     public void should_throwException_ifMetadata_wasMissing() throws Exception {
-        final byte[] testJpeg = getTestJpegAsset("remslip-no-metadata.jpeg");
+        final byte[] testJpeg = loadAsset("remslip-no-metadata.jpeg");
         ExifReaderException exception = null;
         try {
             ExifReader.forJpeg(testJpeg);
-        } catch (ExifReaderException e) {
+        } catch (final ExifReaderException e) {
             exception = e;
         }
         assertThat(exception).isNotNull();
@@ -43,12 +44,12 @@ public class ExifReaderTest {
     @Test
     public void should_throwException_ifUserComment_wasMissing() throws Exception {
         // Given
-        final byte[] testJpeg = getTestJpegAsset("remslip-no-user-comment.jpeg");
+        final byte[] testJpeg = loadAsset("remslip-no-user-comment.jpeg");
         final ExifReader exifReader = ExifReader.forJpeg(testJpeg);
         ExifReaderException exception = null;
         try {
             exifReader.getUserComment();
-        } catch (ExifReaderException e) {
+        } catch (final ExifReaderException e) {
             exception = e;
         }
         assertThat(exception).isNotNull();
@@ -62,7 +63,7 @@ public class ExifReaderTest {
         try {
             final byte[] notJpeg = new byte[]{0, 2, 3, 1};
             ExifReader.forJpeg(notJpeg);
-        } catch (ExifReaderException e) {
+        } catch (final ExifReaderException e) {
             exception = e;
         }
         assertThat(exception).isNotNull();

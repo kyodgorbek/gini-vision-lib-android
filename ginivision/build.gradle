@@ -39,6 +39,11 @@ android {
             java.srcDirs += "$projectDir/src/testShared/java"
         }
     }
+
+    // Fix for androidTest builds due to Play Services Vision and Espresso creating their own protobuf.meta files
+    packagingOptions {
+        pickFirst 'protobuf.meta'
+    }
 }
 
 dependencies {
@@ -50,6 +55,7 @@ dependencies {
     compile deps.commonsImaging
     compile deps.slf4j
     compile deps.completableFuture
+    compile deps.playServicesVision
 
     compile fileTree(dir: '${project.rootDir}/tools/doccheck-doclet', include: ['*.jar'])
 
