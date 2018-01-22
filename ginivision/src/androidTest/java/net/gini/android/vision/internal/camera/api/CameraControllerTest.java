@@ -23,7 +23,7 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public class CameraControllerTest {
 
-    private ActivityTestRule<NoOpActivity> mIntentsTestRule = new ActivityTestRule<>(
+    private final ActivityTestRule<NoOpActivity> mIntentsTestRule = new ActivityTestRule<>(
             NoOpActivity.class, true, false);
 
     private CameraController mCameraController;
@@ -65,7 +65,7 @@ public class CameraControllerTest {
 
     private Camera openAndGetCamera() throws InterruptedException {
         mCameraController.open().join();
-        Camera camera = mCameraController.getCamera();
+        final Camera camera = mCameraController.getCamera();
         assertThat(camera).isNotNull();
         return camera;
     }

@@ -4,19 +4,23 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static net.gini.android.vision.testutils.Helpers.doParcelingRoundTrip;
 
-import android.support.test.runner.AndroidJUnit4;
+import net.gini.android.vision.BuildConfig;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
-@RunWith(AndroidJUnit4.class)
+@RunWith(RobolectricTestRunner.class)
+@Config(constants = BuildConfig.class,
+        manifest = "AndroidManifest.xml")
 public class OnboardingPageTest {
 
     @Test
     public void should_beParcelable() {
         //noinspection ResourceType
-        OnboardingPage toParcel = new OnboardingPage(314, 42, true);
-        OnboardingPage fromParcel = doParcelingRoundTrip(toParcel, OnboardingPage.CREATOR);
+        final OnboardingPage toParcel = new OnboardingPage(314, 42, true);
+        final OnboardingPage fromParcel = doParcelingRoundTrip(toParcel, OnboardingPage.CREATOR);
 
         assertThat(toParcel.getTextResId()).isEqualTo(fromParcel.getTextResId());
         assertThat(toParcel.getImageResId()).isEqualTo(fromParcel.getImageResId());

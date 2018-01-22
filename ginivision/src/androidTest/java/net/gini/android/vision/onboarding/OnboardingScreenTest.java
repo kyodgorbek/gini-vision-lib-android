@@ -82,7 +82,7 @@ public class OnboardingScreenTest {
 
     @Test
     public void should_finish_whenNextButton_isClicked_onLastPage() throws InterruptedException {
-        OnboardingActivity activity = startOnboardingActivity();
+        final OnboardingActivity activity = startOnboardingActivity();
 
         // Go to the last page by clicking the next button
         final ViewInteraction viewInteraction = Espresso.onView(
@@ -100,7 +100,7 @@ public class OnboardingScreenTest {
 
     @Test
     public void should_finish_whenSwiped_onLastPage() throws InterruptedException {
-        OnboardingActivity activity = startOnboardingActivity();
+        final OnboardingActivity activity = startOnboardingActivity();
 
         // Go to the last page by swiping
         final ViewInteraction viewInteraction = Espresso.onView(
@@ -118,14 +118,14 @@ public class OnboardingScreenTest {
 
     @Test
     public void should_showCustomPages_whenSet() throws InterruptedException {
-        ArrayList<OnboardingPage> customPages = new ArrayList<>(1);
+        final ArrayList<OnboardingPage> customPages = new ArrayList<>(1);
         customPages.add(new OnboardingPage(R.string.gv_title_camera, R.drawable.gv_camera_trigger));
         customPages.add(
                 new OnboardingPage(R.string.gv_title_review, R.drawable.gv_review_button_rotate));
 
-        Intent intent = getOnboardingActivityIntent();
+        final Intent intent = getOnboardingActivityIntent();
         intent.putExtra(OnboardingActivity.EXTRA_ONBOARDING_PAGES, customPages);
-        OnboardingActivity activity = startOnboardingActivity(intent);
+        final OnboardingActivity activity = startOnboardingActivity(intent);
 
         // Give some time for the activity to start
         Thread.sleep(TEST_PAUSE_DURATION);
@@ -167,12 +167,12 @@ public class OnboardingScreenTest {
 
     @Test
     public void should_notShowEmptyLastPage_ifRequested() {
-        OnboardingActivity onboardingActivity = startOnboardingActivity();
-        OnboardingFragmentCompat onboardingFragment =
+        final OnboardingActivity onboardingActivity = startOnboardingActivity();
+        final OnboardingFragmentCompat onboardingFragment =
                 OnboardingFragmentCompat.createInstanceWithoutEmptyLastPage();
         onboardingActivity.showFragment(onboardingFragment);
 
-        // ViewPager should contain the default pages and an empty last page
+        // ViewPager should contain the default pages only
         Espresso.onView(ViewMatchers.withId(R.id.gv_onboarding_viewpager))
                 .check(ViewAssertions.matches(
                         EspressoMatchers.hasPageCount(getDefaultPages().length)));
@@ -184,7 +184,7 @@ public class OnboardingScreenTest {
         // Given
         assumeTrue(!isTablet());
 
-        UiDevice uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        final UiDevice uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         uiDevice.setOrientationLeft();
         waitForWindowUpdate(uiDevice);
 
@@ -192,7 +192,7 @@ public class OnboardingScreenTest {
         waitForWindowUpdate(uiDevice);
 
         // Then
-        int rotation = onboardingActivity.getWindowManager().getDefaultDisplay().getRotation();
+        final int rotation = onboardingActivity.getWindowManager().getDefaultDisplay().getRotation();
         assertThat(rotation)
                 .isEqualTo(Surface.ROTATION_0);
     }

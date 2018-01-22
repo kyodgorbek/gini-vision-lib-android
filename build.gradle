@@ -54,7 +54,7 @@ def supportLibVersion = '26.0.2'
 def mockitoVersion = '2.6.3'
 def testSupportLibVersion = '1.0.1'
 def espressoVersion = '3.0.1'
-def robolectricVersion = '3.3.2'
+def robolectricVersion = '3.6.1'
 
 ext.deps = [
         // Android

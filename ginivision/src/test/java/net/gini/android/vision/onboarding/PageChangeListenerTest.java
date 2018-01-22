@@ -2,63 +2,67 @@ package net.gini.android.vision.onboarding;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static net.gini.android.vision.onboarding.PageIndicatorsHelper.isPageActive;
+import static net.gini.android.vision.onboarding.PageIndicatorsHelper.createPageIndicatorsInstance;
 
-import android.support.annotation.NonNull;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
-import android.widget.LinearLayout;
+import net.gini.android.vision.BuildConfig;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@RunWith(AndroidJUnit4.class)
+@RunWith(RobolectricTestRunner.class)
+@Config(constants = BuildConfig.class,
+        manifest = "AndroidManifest.xml")
 public class PageChangeListenerTest {
 
     @Test
     public void should_updatePageIndicators_onPageChange() {
-        OnboardingFragmentImpl.PageIndicators pageIndicators = createPageIndicatorsInstance(2);
-        OnboardingFragmentImpl.PageChangeListener.Callback callback =
+        final OnboardingFragmentImpl.PageIndicators pageIndicators =
+                createPageIndicatorsInstance(2);
+        final OnboardingFragmentImpl.PageChangeListener.Callback callback =
                 new OnboardingFragmentImpl.PageChangeListener.Callback() {
                     @Override
                     public void onLastPage() {
                     }
                 };
 
-        OnboardingFragmentImpl.PageChangeListener pageChangeListener =
+        final OnboardingFragmentImpl.PageChangeListener pageChangeListener =
                 new OnboardingFragmentImpl.PageChangeListener(pageIndicators, 0, 2, callback);
         pageChangeListener.init();
 
         pageChangeListener.onPageSelected(1);
 
-        isPageActive(pageIndicators, 1);
+        PageIndicatorsHelper.isPageActive(pageIndicators, 1);
     }
 
     @Test
     public void should_setPageIndicator_toInitialCurrentPage() {
-        OnboardingFragmentImpl.PageIndicators pageIndicators = createPageIndicatorsInstance(2);
-        OnboardingFragmentImpl.PageChangeListener.Callback callback =
+        final OnboardingFragmentImpl.PageIndicators pageIndicators =
+                createPageIndicatorsInstance(2);
+        final OnboardingFragmentImpl.PageChangeListener.Callback callback =
                 new OnboardingFragmentImpl.PageChangeListener.Callback() {
                     @Override
                     public void onLastPage() {
                     }
                 };
 
-        OnboardingFragmentImpl.PageChangeListener pageChangeListener =
+        final OnboardingFragmentImpl.PageChangeListener pageChangeListener =
                 new OnboardingFragmentImpl.PageChangeListener(pageIndicators, 1, 2, callback);
         pageChangeListener.init();
 
-        isPageActive(pageIndicators, 1);
+        PageIndicatorsHelper.isPageActive(pageIndicators, 1);
     }
 
     @Test
     public void should_invokeCallback_whenLastPage_wasReached() {
-        OnboardingFragmentImpl.PageIndicators pageIndicators = createPageIndicatorsInstance(4);
+        final OnboardingFragmentImpl.PageIndicators pageIndicators =
+                createPageIndicatorsInstance(4);
 
         final AtomicBoolean lastPageCalled = new AtomicBoolean();
-        OnboardingFragmentImpl.PageChangeListener.Callback callback =
+        final OnboardingFragmentImpl.PageChangeListener.Callback callback =
                 new OnboardingFragmentImpl.PageChangeListener.Callback() {
                     @Override
                     public void onLastPage() {
@@ -66,22 +70,12 @@ public class PageChangeListenerTest {
                     }
                 };
 
-        OnboardingFragmentImpl.PageChangeListener pageChangeListener =
+        final OnboardingFragmentImpl.PageChangeListener pageChangeListener =
                 new OnboardingFragmentImpl.PageChangeListener(pageIndicators, 1, 4, callback);
         pageChangeListener.init();
 
         pageChangeListener.onPageSelected(3);
 
         assertThat(lastPageCalled.get()).isTrue();
-    }
-
-    @NonNull
-    private OnboardingFragmentImpl.PageIndicators createPageIndicatorsInstance(int nrOfPages) {
-        LinearLayout linearLayout = new LinearLayout(InstrumentationRegistry.getTargetContext());
-        OnboardingFragmentImpl.PageIndicators pageIndicators =
-                new OnboardingFragmentImpl.PageIndicators(
-                        InstrumentationRegistry.getTargetContext(), nrOfPages, linearLayout);
-        pageIndicators.create();
-        return pageIndicators;
     }
 }
